@@ -13,9 +13,10 @@ Telegram userbot for analyzing user messages with LLM. Supports local PostgreSQL
 ![Скачивание или клонирование](<./screenshots/zip.png>)
 
 Или используйте предпочитаемый протокол:
+
 `git clone https://github.com/sharkywasd/n8n-selfbot-message-parser.git` (HTTPS)
 
-`git@github.com:sharkywasd/n8n-selfbot-message-parser.git` (SSH, использовать, если настроен SSH-ключ)
+`git clone git@github.com:sharkywasd/n8n-selfbot-message-parser.git` (SSH, использовать, если настроен SSH-ключ)
 
 **1. Регистрируем API Development Tools**
 
