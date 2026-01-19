@@ -1,0 +1,364 @@
+{
+  "name": "Channel_ID Parser",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "* * 21 * * *"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1224483548,
+          "mode": "list",
+          "cachedResultName": "PasteChannelLinks",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1224483548"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "b57caf5b-a1f7-4ec2-bf11-645769a169c8",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "4m4boBmcNiGrrXCH",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "searchPublicChat",
+        "username": "={{ $json.values()[0] }}"
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        16
+      ],
+      "id": "2cce0127-cfe2-492f-8e14-2b147910d109",
+      "name": "Search public chat by username",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.random() * 10 + 5 }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        16
+      ],
+      "id": "2cd49df4-6a43-4da9-9885-3c3a0b5c6062",
+      "name": "Wait2",
+      "webhookId": "dd357782-4ca2-4b45-867b-fe7da32d9b19"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        848,
+        0
+      ],
+      "id": "e728206f-9906-4bc2-b9c5-6c26e7880a07",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        -160
+      ],
+      "id": "0594b3f7-9838-4a1c-8075-28fd0b004cb6",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 962513866,
+          "mode": "list",
+          "cachedResultName": "GetChannelIDs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Channel_username"
+          ],
+          "schema": [
+            {
+              "id": "Channel_URL",
+              "displayName": "Channel_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Channel_username",
+              "displayName": "Channel_username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Channel_ID",
+              "displayName": "Channel_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Channel_Title",
+              "displayName": "Channel_Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Insatnce_ID",
+              "displayName": "Insatnce_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        16
+      ],
+      "id": "52393d6e-bc85-43d0-8288-889fc22bc03b",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Воркфлоу для обработки ссылок чатов\nСохраняет информацию по каналу в гугл таблицы.\n\nНеобходимы credential из Google Cloud Console и настройка листов\n\nПредлагаемая структура листов:\n1. PasteChannelLinks - лист для вставки ссылок каналов. Столбцы: URLs.\n2. GetChannelIDs - лист для сохранения метаданных по каналам. Этот же лист может использоваться в воркфлоу для поиска по ключам. Столбцы (опционально): Channel_URL, Channel_username, Channel_ID, Channel_Title.\n\nНабор данных о чате настраивается в ноде \"Данные о чате\".\nИнформация о чате обновляется или добавляется, если такой записи не было.\nТриггер стоит на изменения на листе PasteChannelLinks.\n\nДля тестового выполнения циклы использовать ноду No Operation, do nothing",
+        "height": 368,
+        "width": 768,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -96
+      ],
+      "id": "9485c51a-5015-49ef-a4e3-4de49a7d5d79",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de0f0866-6570-4b02-a8e7-fa086918a5b1",
+              "name": "Channel_URL",
+              "value": "={{ $('Loop Over Items').item.json.keys()[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd0782c4-9cfd-44c7-b6eb-81af031a517e",
+              "name": "Channel_username",
+              "value": "={{ $('Loop Over Items').item.json.values()[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "f507980a-3fac-4b3f-a4d6-fbe521e33eeb",
+              "name": "Channel_ID",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "4f48aa92-56c6-48ed-87d6-77add6ee3229",
+              "name": "Channel_Title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        16
+      ],
+      "id": "e9204661-37f1-4384-b6e3-538b23d47234",
+      "name": "Данные о чате"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем входные данные\nconst items = $input.all();\nconst result = [];\n\n// Обрабатываем каждый элемент\nfor (const item of items) {\n  const itemJson = item.json;\n  const url = itemJson.URLs;\n  \n  if (url && typeof url === 'string' && url.startsWith(\"https://t.me/\")) {\n    const channelName = url.substring(13);\n    \n    // Создаем объект с парой URL:имя_канала\n    const pair = {};\n    pair[url] = channelName;\n    \n    result.push(pair);\n  }\n}\n\n// Возвращаем результат в формате n8n\nreturn result.map(item => ({ \n  json: item \n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "a9e1a343-8445-4ade-84c9-c512e643c518",
+      "name": "trim_url"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "trim_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search public chat by username": {
+      "main": [
+        [
+          {
+            "node": "Данные о чате",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search public chat by username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Данные о чате": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trim_url": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "38399b81-0121-4d24-aa73-d2fb0d4f7887",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "jbuTInaDQ208JGp3",
+  "tags": []
+}

@@ -1,0 +1,1153 @@
+{
+  "name": "Upload messages to DB",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT table_name \nFROM information_schema.tables \nWHERE table_schema = 'public'\nORDER BY table_name;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        -800
+      ],
+      "id": "bac52ed2-79ea-4d44-a1e3-4f5f550e9fa4",
+      "name": "Существующие таблицы",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n   SELECT FROM information_schema.tables \n   WHERE table_schema = 'public' \n   AND table_name = 'telegram_messages'\n) as table_exists;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -352
+      ],
+      "id": "ba8db31c-65ab-431d-b9c0-81d3375ec8aa",
+      "name": "Существование таблицы для сообщений",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -480
+      ],
+      "id": "bc7cf466-ea64-4be1-8cd0-215ffff4ec73",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8b1d91b1-780b-4312-903d-ed790b99709f",
+              "leftValue": "={{ $json.table_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        -352
+      ],
+      "id": "0e417680-842b-4223-8f0c-c228df24b341",
+      "name": "If Table exists"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE telegram_messages (\n  id BIGSERIAL PRIMARY KEY,\n  chat_id BIGINT NOT NULL,\n  user_id BIGINT NOT NULL,\n  message_id BIGINT NOT NULL,\n  text TEXT,\n  telegram_date TIMESTAMPTZ,\n  \n  llm_processed BOOLEAN DEFAULT FALSE,\n  llm_is_relevant BOOLEAN,\n  \n  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,\n  \n  CONSTRAINT unique_telegram_message UNIQUE (chat_id, message_id)\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        -336
+      ],
+      "id": "639b13ee-4dba-4441-8e2a-d4fc66383b2e",
+      "name": "Создание таблицы для сообщений",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "BEGIN;\n\nDELETE FROM telegram_messages;\n\nALTER SEQUENCE telegram_messages_id_seq RESTART WITH 1;\n\n-- Явная проверка\nSELECT COUNT(*) FROM telegram_messages;\n-- Если не 0 - что-то пошло не так\n\nSELECT last_value FROM telegram_messages_id_seq;\n-- Если не 1 - что-то пошло не так\n\n-- Если дошли сюда - все ок\nCOMMIT;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        496,
+        -800
+      ],
+      "id": "ce259020-45ff-4c94-9abb-8f03c3949631",
+      "name": "Очистить таблицу с сообщениями полностью",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Сценарий для записи нового сообщения в БД PostgreSQL.\nТриггер собирает информацию о каждом новом сообщении, поступившему юзерботу.\n",
+        "height": 608,
+        "width": 2896
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "fa7a24ca-a72e-45db-833e-1f03ef52e7b4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Сопоставление chat_id с instance_id на основе вашей таблицы\nconst channelToInstanceMap = {\n    \"-1001481574785\": 1,  // n8n Chat & Community\n    \"-1001669426155\": 1,  // Midjourney Chat & Community\n    \"-1001355397423\": 1,  // ⚡️ Запили мне, зерокодер\n    \"-1001368529433\": 1,  // Tilda Chat & Community\n    \"-1002691668415\": 1,  // n8n — Ai автоматизация\n    \"-1001846101893\": 2,  // ChatGPT Chat & Community\n    \"-1001713869488\": 2,  // Нейросетевые покои\n    \"-1001227126149\": 2,  // 💎 Зерокодер\n    \"-1001400993706\": 2,  // FlutterFlow Chat & Community\n    \"-1001875436239\": 2,  // Supabase Chat & Community\n    \"-1001320116679\": 3,  // Directual Chat & Community\n    \"-1001490371259\": 3,  // Webflow Chat & Community\n    \"-1001495935272\": 3,  // Adalo Chat & Community\n    \"-1001325600676\": 3,  // Make (ex-Integromat) Chat & Community\n    \"-1001493935574\": 3,  // Bubble Chat & Community\n    \"-1002357729236\": 4,  // На фрилансе 🧑‍💻\n    \"-1001496931309\": 4,  // Airtable Chat & Community\n    \"-1001386345486\": 4,  // GlideApps Chat & Community\n    \"-1001797490588\": 4   // Appsmith Chat & Community\n};\n\nreturn items.map(item => {\n    // Получаем instance_id из маппинга, преобразуя chat_id в строку для поиска\n    const chatIdStr = String(item.json.chat_id);\n    const instanceId = channelToInstanceMap[chatIdStr] || null;\n    \n    return {\n        json: {\n            // SQL запрос с параметрами $1, $2, ...\n            query: `\n                INSERT INTO telegram_messages \n                    (chat_id, user_id, message_id, text, telegram_date, instance_id)\n                VALUES ($1, $2, $3, $4, $5, $6)\n                ON CONFLICT (chat_id, message_id)\n                DO UPDATE SET\n                    text = EXCLUDED.text,\n                    telegram_date = EXCLUDED.telegram_date,\n                    instance_id = EXCLUDED.instance_id,\n                    llm_processed = CASE \n                        WHEN telegram_messages.text IS DISTINCT FROM EXCLUDED.text THEN FALSE\n                        ELSE telegram_messages.llm_processed\n                    END,\n                    llm_is_relevant = CASE \n                        WHEN telegram_messages.text IS DISTINCT FROM EXCLUDED.text THEN NULL\n                        ELSE telegram_messages.llm_is_relevant\n                    END,\n                    updated_at = CURRENT_TIMESTAMP\n                RETURNING id;\n            `,\n            \n            // МАССИВ значений (важно!)\n            params: [\n                item.json.chat_id,           // число\n                item.json.user_id,           // число  \n                item.json.message_id,        // число\n                item.json.text || null,      // строка или null\n                item.json.telegram_date,     // строка\n                instanceId                   // число или null\n            ]\n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        112
+      ],
+      "id": "2a2d4de1-3625-45b6-afd7-1faec7764e52",
+      "name": "Подготовка данных для параметрического SQL-запроса"
+    },
+    {
+      "parameters": {
+        "content": "## Сценарий для создания таблицы для сообщений в БД.\nЕсли таблицы нет - создаёт.\n",
+        "height": 432,
+        "width": 1072,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "877d9f6b-6214-4dcb-80d1-38d2c838c286",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Структура таблицы в БД.\nВыходные данные с содержанием первых n элементов таблицы с сообщениями.",
+        "height": 320,
+        "width": 384,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "c12e6ebb-4904-4ecb-b045-a6064a1e94f1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Проверка работоспособности БД.\nВыдаёт все таблицы в БД.\n",
+        "height": 352,
+        "width": 352,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        -960
+      ],
+      "typeVersion": 1,
+      "id": "52a0d8e4-9bd6-48e6-81fb-537bf56f37d4",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Полная очистка таблицы в БД.\nПолностью очищает таблицу с сообщениями и обнуляем счётчик уникального идентификатора.",
+        "height": 352,
+        "width": 384,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        -960
+      ],
+      "typeVersion": 1,
+      "id": "8cc51010-d5fa-4ba1-9f06-6cfed20b745e",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a9fea8c4-f925-49fe-b1d1-042d899c37a8",
+              "leftValue": "={{ $json.message.content.text.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        96
+      ],
+      "id": "f0790d70-a5a6-48e8-9082-115e4a611eeb",
+      "name": "If text exists"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        384,
+        448
+      ],
+      "id": "d58857d5-0826-445d-84f3-b01c4cfa1ae5",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}",
+        "options": {
+          "queryReplacement": "={{ $json.params }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2272,
+        112
+      ],
+      "id": "a22c9e72-f504-4029-ba9a-c87e6bbc67fb",
+      "name": "UPSERT-запрос",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = [];\n\nfor (const item of $input.all()) {\n  if (item.json && item.json.message) {\n    const message = item.json.message;\n    \n    const chat_id = message.chat_id || null;\n    const message_id = message.id || null;\n    \n    let user_id = null;\n    if (message.sender_id && message.sender_id.user_id !== undefined && message.sender_id.user_id !== null) {\n      user_id = message.sender_id.user_id; // ТОЛЬКО из sender_id.user_id\n    }\n    \n    // Пропускаем записи без user_id\n    if (user_id === null || user_id === undefined) {\n      continue;\n    }\n    \n    // ТОЛЬКО message.content.text.text\n    let text = null;\n    if (message.content && \n        message.content.text && \n        message.content.text.text && \n        typeof message.content.text.text === 'string') {\n      text = message.content.text.text;\n    }\n    \n    let telegram_date = null;\n    if (message.date) {\n      telegram_date = typeof message.date === 'number' \n        ? new Date(message.date * 1000).toISOString()\n        : message.date;\n    }\n    \n    // Условие: (message_id = null & chat_id = null & user_id = null) or (text = null)\n    // Теперь user_id всегда не null, но оставляем проверку для других полей\n    const allIdsNull = message_id === null || chat_id === null;\n    if (allIdsNull || text === null) {\n      continue;\n    }\n    \n    const trimmedText = text.trim();\n    if (trimmedText === '' || trimmedText === 'null') {\n      continue;\n    }\n    \n    result.push({\n      chat_id,\n      user_id,\n      message_id,\n      text: trimmedText,\n      telegram_date\n    });\n  }\n}\n\nreturn result.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        112
+      ],
+      "id": "34da8f68-6584-441b-b424-2c57d164fd0c",
+      "name": "Выпрямление списка & обработка данных"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f01dffd9-d78e-4bc6-b70e-795ab5f6823e",
+              "leftValue": "={{ [\n    -1002910023629,\n    -1001080132414,\n    -1001366762080,\n    -1001849777547,\n    -1002334414844,\n    -1001067797620,\n    -1001481574785,\n    -1001669426155,\n    -1001355397423,\n    -1001368529433,\n    -1002691668415,\n    -1001846101893,\n    -1001713869488,\n    -1001227126149,\n    -1001400993706,\n    -1001875436239,\n    -1001320116679,\n    -1001490371259,\n    -1001495935272,\n    -1001325600676,\n    -1001493935574,\n    -1002357729236,\n    -1001496931309,\n    -1001386345486,\n    -1001797490588\n]; }}",
+              "rightValue": "={{ $('New message Trigger').item.json.message.chat_id }}",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        80
+      ],
+      "id": "153c8c2d-f0ce-4644-b1b3-1b07488cc064",
+      "name": "If target chat_id",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Измнение таблицы в БД.\nИспользовать для изменения структуры и значений БД.",
+        "height": 320,
+        "width": 384,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        -960
+      ],
+      "typeVersion": 1,
+      "id": "0ea23ca4-a786-44a0-bbed-6c82ca4f43e6",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Содержание таблицы в БД.\nВыходные данные с содержанием первых n элементов таблицы с сообщениями.",
+        "height": 320,
+        "width": 384,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1520,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "51bbed05-d7fc-40e0-81ec-cc84a2141a2e",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    column_name,\n    data_type,\n    is_nullable,\n    column_default\nFROM information_schema.columns \nWHERE table_name = 'telegram_messages'\nORDER BY ordinal_position;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1216,
+        -464
+      ],
+      "id": "22502fbf-16e4-4079-8e96-c8c22669a97e",
+      "name": "Структура таблицы с сообщениями",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE telegram_messages\nSET \n  llm_processed = false,\n  llm_is_relevant = NULL,\n  updated_at = NOW()\nWHERE \n  llm_processed != false \n  OR llm_is_relevant IS NOT NULL\n  AND chat_id = 777;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1216,
+        -832
+      ],
+      "id": "d10c1513-1443-47d8-8386-e8995e102b06",
+      "name": "Изменение таблицы с сообщениями",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM telegram_messages\nWHERE chat_id = 666 AND llm_is_relevant is FALSE",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1664,
+        -464
+      ],
+      "id": "cd990126-46bd-41e6-9cd4-0c7df721a849",
+      "name": "Содержание таблицы с сообщениями",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5d173d42-3f33-4524-97e8-607bf3b44eb0",
+              "name": "message.id",
+              "value": "={{ $json.message.id }}",
+              "type": "number"
+            },
+            {
+              "id": "0b0f4db8-be82-4e1f-8032-43c89cfb6458",
+              "name": "message.sender_id.user_id",
+              "value": "={{ $json.message.sender_id.user_id ?? $json.message.sender_id.chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "469678b3-a654-4cb9-9fb2-f0bc1a299291",
+              "name": "message.chat_id",
+              "value": "={{ $json.message.chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "d2a89474-3e2b-4a64-9555-1403e8c90f04",
+              "name": "message.content.text.text",
+              "value": "={{ $json.message.content.text.text }}",
+              "type": "string"
+            },
+            {
+              "id": "45ddd3ca-d2a7-4a57-9a29-fdaae33fa5f8",
+              "name": "message.date",
+              "value": "={{ new Date($json.message.date * 1000).toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1680,
+        112
+      ],
+      "id": "b31dd80d-4eee-459b-9f87-7ffebab0e8d2",
+      "name": "Метаданные",
+      "notesInFlow": true,
+      "notes": "(сообщение, пользователь, источник, время)"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        272
+      ],
+      "id": "4d256413-5f88-4de0-85e5-a2b02de72f25",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "Channel_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        896,
+        288
+      ],
+      "id": "001ffc40-5347-4b54-8137-3a900d8325c7",
+      "name": "Aggregate chat_ids"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 962513866,
+          "mode": "list",
+          "cachedResultName": "GetChannelIDs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:C"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        288
+      ],
+      "id": "26cd8934-f0c5-4fa4-aae4-566940817937",
+      "name": "Get target chat_ids",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "events": [
+          "updateNewMessage"
+        ],
+        "options": {}
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilotTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ],
+      "id": "aad015a3-dd4f-4bbd-a45c-3622db1e9097",
+      "name": "TelePilot Trigger",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a9fea8c4-f925-49fe-b1d1-042d899c37a8",
+              "leftValue": "={{ $json.message.is_outgoing }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        288
+      ],
+      "id": "258c92d1-dadb-4468-a692-5248f33917d8",
+      "name": "If is_outgoing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        704,
+        448
+      ],
+      "id": "4564f4ad-5d20-47b7-8545-026ab106090a",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3cffb379-c1a3-4a04-a6c1-8b3b89f0182b",
+              "leftValue": "={{ $json.message.content.text.text }}",
+              "rightValue": "Чтобы иметь возможность писать в нашей группе пройди верификацию",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1520,
+        272
+      ],
+      "id": "00708ddd-7036-435c-b86d-55563d3b10d5",
+      "name": "If text is not verification message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "af32c671-b5af-4f70-aee2-d2fa2c07f071",
+              "leftValue": "={{ $('Aggregate chat_ids').first().json.Channel_ID }}",
+              "rightValue": "={{ $json.message.chat_id }}",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        272
+      ],
+      "id": "2c8b3e82-4609-4779-b4c6-69575bf6cdb1",
+      "name": "If target_chat_id"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/node/.n8n-files/telegram_speech_relevance_200_nonrelevant_only.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        -832
+      ],
+      "id": "15b31857-3d11-4894-8c7c-439add0f54d6",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ";"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1776,
+        -832
+      ],
+      "id": "363914ad-3cc1-46dc-be2d-71b4a8ded09e",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "content": "## Инструкция по работе с воркфлоу\nПри разворачивании проекта необходима инициализация БД, она реализуется с помощью сценария создания таблицы. Для выполнения необходимо выполнить последнюю ноду \"Создание таблицы для сообщений\".\n\nВсе параметры столбцов в БД заданы в этой ноде.\n\nДля основного сценария записи сообщений в БД используются Гугл таблицы с листом результатов работы парсера по идентификаторам каналов (GetChannelIDs). Если не используется парсер или количество необходимых каналов для получения сообщений мало - можно использовать отключенную If ноду.",
+        "height": 432,
+        "width": 400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -576
+      ],
+      "id": "955c3067-cbaa-4d4d-8e9b-5980121cac3b",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Загрузка тестовых данных\nИспользуется промапленная директория докер контейнера, связанная с директорией в которой находится проект. Данную директорию можно изменить в .yml файле проекта/",
+        "height": 320,
+        "width": 784,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1520,
+        -960
+      ],
+      "typeVersion": 1,
+      "id": "34925ddf-f426-4309-baed-fdfb82a64b63",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_messages",
+          "mode": "list",
+          "cachedResultName": "telegram_messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tg_sent": false,
+            "chat_id": "=666",
+            "user_id": "=1488",
+            "message_id": "={{ $json.message_id }}",
+            "text": "={{ $json.text }}",
+            "telegram_date": "2026-01-18T00:00:00",
+            "llm_processed": false,
+            "llm_is_relevant": false,
+            "created_at": "2026-01-18T17:04:26",
+            "instance_id": 5,
+            "id": "={{ $json.message_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_date",
+              "displayName": "telegram_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "llm_processed",
+              "displayName": "llm_processed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "llm_is_relevant",
+              "displayName": "llm_is_relevant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tg_sent",
+              "displayName": "tg_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instance_id",
+              "displayName": "instance_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2000,
+        -832
+      ],
+      "id": "86f0d15c-8150-4a52-a85b-eae9a565e238",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Существование таблицы для сообщений": {
+      "main": [
+        [
+          {
+            "node": "If Table exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Table exists": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Создание таблицы для сообщений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка данных для параметрического SQL-запроса": {
+      "main": [
+        [
+          {
+            "node": "UPSERT-запрос",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If text exists": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If is_outgoing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPSERT-запрос": {
+      "main": [
+        []
+      ]
+    },
+    "Выпрямление списка & обработка данных": {
+      "main": [
+        [
+          {
+            "node": "Подготовка данных для параметрического SQL-запроса",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If target chat_id": {
+      "main": [
+        []
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        []
+      ]
+    },
+    "Структура таблицы с сообщениями": {
+      "main": [
+        []
+      ]
+    },
+    "Метаданные": {
+      "main": [
+        [
+          {
+            "node": "Выпрямление списка & обработка данных",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If target_chat_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate chat_ids": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get target chat_ids": {
+      "main": [
+        [
+          {
+            "node": "Aggregate chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TelePilot Trigger": {
+      "main": [
+        [
+          {
+            "node": "If text exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If is_outgoing": {
+      "main": [
+        [
+          {
+            "node": "Get target chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If target_chat_id": {
+      "main": [
+        [
+          {
+            "node": "If text is not verification message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If text is not verification message": {
+      "main": [
+        [
+          {
+            "node": "Метаданные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Cuotassx3PEelIog",
+    "timezone": "Europe/Moscow"
+  },
+  "versionId": "e7317270-b174-4d43-9141-e9aa7633eeb4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "Q3CJlCz93ozQjfSE",
+  "tags": []
+}

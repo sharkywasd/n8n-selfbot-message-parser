@@ -1,0 +1,1294 @@
+{
+  "name": "LLM Analyze DB",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — строгий классификатор. На входе JSON-массив объектов сообщений.\nНа выходе верни ТОЛЬКО валидный JSON-массив той же длины и в том же порядке.\n\nЗадача:\nДля каждого сообщения определи, связано ли оно с сервисами обработки РЕЧИ/АУДИО/ВИДЕО:\n- транскрибация (speech-to-text, расшифровка)\n- диаризация (разделение по спикерам / кто что сказал)\n- суммаризация (итоги созвона/встречи/протокол/конспект по записи или транскрипту)\n- анализ тональности/эмоций (sentiment analysis по звонку/разговору/аудио или по транскрипту разговора)\n\nВерни для каждого элемента:\n- llm_is_relevant: boolean (true/false)\n- и ВСЕ оригинальные поля из входного элемента без изменений значений.\n\nПравила вывода:\n1) Выход — только JSON-массив. Без markdown, без пояснений, без комментариев.\n2) Количество элементов = количеству входных элементов. Порядок элементов не менять.\n3) Поля chat_id, message_id копируй как есть (не исправляй, не сокращай, не нормализуй).\n4) Никаких новых полей, кроме llm_is_relevant. Никаких удалённых полей.\n5) Если какого-то поля нет во входе — верни его со значением null (и всё равно добавь llm_is_relevant).\n6) Строки в JSON должны быть корректно экранированы.\n7) Если по одному сообщению недостаточно контекста — ставь false (лучше пропустить, чем дать ложный true).\n\nКритерии llm_is_relevant = true (есть явная связь с услугами/инструментами):\nA) Транскрибация:\n- “транскрибация”, “расшифровка”, “перевести запись/аудио/видео в текст”, “стенограмма”, “диктофон → текст”\n- “субтитры”, “SRT/VTT”, “таймкоды”, “ASR”, “speech-to-text”, “распознавание речи”\n- вопросы о цене/качестве/скорости/языках/моделях/интеграции/API для этого\n\nB) Диаризация:\n- “диаризация”, “разделить по спикерам”, “кто что сказал”, “speaker diarization”, “разделение голосов”\n- “определить участников”, “пометить реплики”, “спикер 1/2”, “разметка по говорящим”\n\nC) Суммаризация по записи/созвону/транскрипту разговора:\n- “саммари/суммаризация созвона”, “итоги встречи”, “протокол”, “minutes of meeting”, “action items”, “задачи по встрече”\n- “краткое резюме по звонку/интервью/подкасту”, “вытащить решения/договоренности”\n\nD) Анализ тональности/эмоций по разговору/звонку/голосовым (или по транскрипту разговора):\n- “анализ тональности звонка/диалога”, “позитив/негатив клиента”, “эмоции в разговоре”\n- “sentiment analysis” применительно к call/meeting/audio/transcript\n\nКритерии llm_is_relevant = false:\n- Нет смысла про обработку речи/аудио/видео.\n- “транскрипция” в другом значении: фонетика/лингвистика (IPA), ДНК/РНК, музыкальная транскрипция и т.п.\n- Суммаризация/тональность только для текста (статья/книга/новость/отзывы) без связи с аудио/звонками/голосом/транскриптом разговора.\n- Спам/оффтоп/пустые сообщения без контекста.\n\nНиже примеры (few-shot). Они ТОЛЬКО для ориентира; далее будет реальный вход.\n\nПРИМЕР 1 (транскрибация услуги)\nВход:\n[\n  {\n    \"id\": 1,\n    \"text\": \"Нужно расшифровать созвон на 45 минут. Сколько стоит и как быстро сделаете?\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": true,\n    \"id\": 1\n  }\n]\n\nПРИМЕР 2 (субтитры/таймкоды)\nВход:\n[\n  {\n    \"id\": 2,\n    \"text\": \"Посоветуйте сервис, который делает субтитры SRT из видео и ставит таймкоды.\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": true,\n    \"id\": 2\n  }\n]\nПРИМЕР 3 (диаризация)\nВход:\n[\n  {\n    \"id\": 3,\n    \"text\": \"Есть решение, чтобы разделить запись интервью по спикерам? Нужно понять кто что сказал.\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": true,\n    \"id\": 3\n  }\n]\n\nПРИМЕР 4 (суммаризация созвона)\nВход:\n[\n  {\n    \"id\": 4,\n    \"text\": \"Нужны итоги встречи: резюме, решения и список задач по записи звонка.\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": true,\n    \"id\": 4\n  }\n]\n\nПРИМЕР 5 (тональность разговора)\nВход:\n[\n  {\n    \"id\": 5,\n    \"text\": \"Можно ли по записи звонка определить тональность и эмоции клиента? Нужна оценка позитив/негатив.\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": true,\n    \"id\": 5\n  }\n]\n\nПРИМЕР 6 (нерелевантно: фонетическая транскрипция)\nВход:\n[\n  {\n    \"id\": 6,\n    \"text\": \"Как сделать фонетическую транскрипцию слова на английском (IPA)?\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 6\n  }\n]\n\nПРИМЕР 7 (нерелевантно: ДНК/РНК)\nВход:\n[\n  {\n    \"id\": 7,\n    \"text\": \"Транскрипция ДНК в РНК — это какой процесс?\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 7,\n  }\n]\n\nПРИМЕР 8 (нерелевантно: тональность отзывов без аудио)\nВход:\n[\n  {\n    \"id\": 8,\n    \"text\": \"Нужен анализ тональности отзывов на маркетплейсе, просто текстовые отзывы.\"\n  }\n]\nВыход:\n[\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 8\n  }\n]\n\nОбщие выходные данные должны выглядеть следующим образом:\n\n{\n\"data\":\n[\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 6\n  },\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 7,\n  },\n  {\n    \"llm_is_relevant\": false,\n    \"id\": 8\n  }\n]\n}\n\nТеперь обработай РЕАЛЬНЫЕ сообщения ниже.\n\nВходные сообщения:\n{{ JSON.stringify($input.all().map(item => item.json), null, 2) }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        16
+      ],
+      "id": "7b80ae3b-eef5-4a50-ae61-98bb2b6e363e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        992,
+        16
+      ],
+      "id": "44d06f81-3000-4594-bac2-32df617624b7",
+      "name": "Объединить элементы в батч"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  \n  // Проверяем обязательные поля\n  if (data.chat_id === undefined || data.message_id === undefined) {\n    console.warn('Missing required fields:', data);\n    return {\n      json: {\n        error: 'Missing chat_id or message_id',\n        data: data\n      }\n    };\n  }\n  \n  // Убираем _debug из данных, если он есть\n  const { _debug, ...dataWithoutDebug } = data;\n  \n  // SQL запрос с проверкой существования\n  const query = `\n    UPDATE telegram_messages \n    SET \n      llm_processed = $1,\n      llm_is_relevant = $2,\n      updated_at = CURRENT_TIMESTAMP\n    WHERE \n      chat_id = $3 \n      AND message_id = $4\n    RETURNING \n      id,\n      (SELECT COUNT(*) FROM telegram_messages \n       WHERE chat_id = $3 AND message_id = $4) > 0 as record_exists;\n  `;\n  \n  const params = [\n    Boolean(dataWithoutDebug.llm_processed),      // $1 - приводим к boolean\n    dataWithoutDebug.llm_is_relevant,             // $2 - может быть null\n    dataWithoutDebug.chat_id,                     // $3\n    dataWithoutDebug.message_id                   // $4\n  ];\n  \n  return {\n    json: {\n      // Для PostgreSQL\n      query: query,\n      params: params.join(','),\n      \n      // Для логирования (только нужные поля, без _debug)\n      update_data: {\n        chat_id: dataWithoutDebug.chat_id,\n        message_id: dataWithoutDebug.message_id,\n        llm_processed: dataWithoutDebug.llm_processed,\n        llm_is_relevant: dataWithoutDebug.llm_is_relevant\n      },\n      action: 'update_llm_status'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3648,
+        16
+      ],
+      "id": "14b2330d-3654-452b-ac3d-c0c2794aae52",
+      "name": "Подготовка SQL-запроса"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        704,
+        0
+      ],
+      "id": "02223d42-df56-4e9b-8939-713244038ea1",
+      "name": "Цикл для батчинга элементов",
+      "notesInFlow": true,
+      "notes": "Количество элементов в батче устанавливается в параметрах ноды"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT chat_id, user_id, message_id, text, telegram_date\nFROM telegram_messages\nWHERE chat_id = 666 AND instance_id = 5 \nLIMIT 100",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        0
+      ],
+      "id": "29c529e9-8019-4585-9f9b-6af5bcd0a00b",
+      "name": "Сбор записей, не обработанных LLM",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}",
+        "options": {
+          "queryReplacement": "={{ $json.params }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4064,
+        16
+      ],
+      "id": "9b56bd13-48be-4e40-a693-87fbf26f2bbc",
+      "name": "Обновление записей",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -144
+      ],
+      "id": "820e87cd-72e3-4c42-9c31-355f87db79e4",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "b39c910d-573a-4163-b3e2-c99b77863467",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## LLM анализирует содержание сообщений\nПроисходит сбор ещё не обработанных записей, их объединение в батч, разделение, подготовка запроса к БД.\n\nКоличество элементов в батче настраивается в ноде \"Цикл для батчинга элементов\".\n\nМодель настраивается в ноде \"OpenRouter Chat Model\"",
+        "height": 240,
+        "width": 496
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -608
+      ],
+      "id": "b529c1e7-7e61-463f-9813-deaf54b08ab6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "function isJsonValid(text) {\n  if (!text || typeof text !== 'string') return false;\n  \n  let braces = 0, brackets = 0;\n  let inString = false, escape = false;\n  \n  for (let char of text) {\n    if (escape) {\n      escape = false;\n      continue;\n    }\n    \n    if (char === '\\\\') {\n      escape = true;\n      continue;\n    }\n    \n    if (char === '\"') {\n      inString = !inString;\n      continue;\n    }\n    \n    if (!inString) {\n      if (char === '{') braces++;\n      if (char === '}') braces--;\n      if (char === '[') brackets++;\n      if (char === ']') brackets--;\n      \n      if (braces < 0 || brackets < 0) return false;\n    }\n  }\n  \n  return braces === 0 && brackets === 0 && !inString;\n}\n\nconst items = $input.all();\nif (!items || items.length === 0) return [];\n\nreturn items.map(item => {\n  try {\n    // Извлекаем текст для проверки\n    const text = item.json?.output || item.output || \n                item.json?.text || item.text || \n                (typeof item.json === 'string' ? item.json : \n                (typeof item === 'string' ? item : JSON.stringify(item)));\n    \n    const isValid = isJsonValid(text);\n    \n    // Если JSON валидный - возвращаем исходные данные + true\n    if (isValid) {\n      return {\n        json: {\n          output: item.json.output,\n          is_valid_json: true\n        }\n      };\n    } \n    // Если не валидный - возвращаем только false\n    else {\n      return {\n        json: {\n          is_valid_json: false\n        }\n      };\n    }\n    \n  } catch (error) {\n    // В случае ошибки - возвращаем только false\n    return {\n      json: {\n        is_valid_json: false\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        16
+      ],
+      "id": "c823afbf-4baa-413a-9208-e1d40686d166",
+      "name": "JSON validation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\n\n// Если структура точно такая: { json: { data: [...] } }\nreturn inputData.map(item => {\n  const filteredData = item.json.data.map(dataItem => ({\n    chat_id: dataItem.chat_id,\n    message_id: dataItem.message_id,\n    text: dataItem.text\n  }));\n  \n  return {\n    json: {\n      data: filteredData\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        16
+      ],
+      "id": "a4d99dc3-361f-4ac2-8d28-d61d6da440c8",
+      "name": "Info for LLM"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6f3238af-ae1b-432e-b175-8e2c8ef995c3",
+              "leftValue": "={{ $json.is_valid_json }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "a6e1cf25-3365-4463-8a5a-90631e4f8f30",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2400,
+        16
+      ],
+      "id": "534ab5e5-464f-4d3a-afe4-8601145f19bb",
+      "name": "If JSON is valid and output != \"\""
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "92b465cc-6346-455a-abeb-13bdf5cb0e1e",
+                    "leftValue": "={{ $json.is_valid_json }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "valid_json"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.is_valid_json }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "id": "5657e9a2-9887-4b95-814b-26a08883d285"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "non_valid_json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2192,
+        16
+      ],
+      "id": "05a1b72c-8ba4-4a7b-af7e-b7a80901d676",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f3a9b91-5e05-4e7f-b0ac-3fa7fed4be12",
+              "name": "is_empty_output",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "875d5865-9c55-411a-89aa-85417e2cdcb0",
+              "name": "is_valid_json",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "468b7513-9161-4c9a-b755-cb2920e54812",
+              "name": "success",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "a4075566-0877-4bb0-aeec-c684578659e8",
+              "name": "runtime",
+              "value": "={{ ($now - Date.parse($('start_time').item.json.timestamp)) / 1000}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3456,
+        304
+      ],
+      "id": "901cfa14-bea5-4cc6-b15d-d0b53bc87011",
+      "name": "Empty output"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3872,
+        304
+      ],
+      "id": "d7422b4f-4ad2-466c-923d-f1515b0a177d",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3872,
+        720
+      ],
+      "id": "b24de7e7-a391-4ef4-94b4-8aa2e62e4628",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1302155247,
+          "mode": "list",
+          "cachedResultName": "ModelsTests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1302155247"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_valid_json": "1",
+            "success": "1",
+            "is_empty_output": "0",
+            "runtime": "={{ ($now - Date.parse($('start_time').item.json.timestamp)) / 1000}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "is_empty_output",
+              "displayName": "is_empty_output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_valid_json",
+              "displayName": "is_valid_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "runtime",
+              "displayName": "runtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3648,
+        -176
+      ],
+      "id": "88148e68-e7d8-43ac-aa04-b6a6fbbf883a",
+      "name": "Успех",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1302155247,
+          "mode": "list",
+          "cachedResultName": "ModelsTests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1302155247"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_valid_json": "={{ $json.is_valid_json}}",
+            "success": "={{ $json.success }}",
+            "is_empty_output": "={{ $json.is_empty_output }}",
+            "runtime": "={{ $json.runtime }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Run",
+              "displayName": "Run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_empty_output",
+              "displayName": "is_empty_output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_valid_json",
+              "displayName": "is_valid_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "runtime",
+              "displayName": "runtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3648,
+        304
+      ],
+      "id": "c3b9ca16-c220-4615-865b-4c342fa0e41f",
+      "name": "Пустой выход",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1302155247,
+          "mode": "list",
+          "cachedResultName": "ModelsTests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1302155247"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_valid_json": "=0",
+            "success": "0",
+            "is_empty_output": "0",
+            "runtime": "={{ $json.runtime }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Run",
+              "displayName": "Run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_empty_output",
+              "displayName": "is_empty_output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_valid_json",
+              "displayName": "is_valid_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "runtime",
+              "displayName": "runtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3648,
+        720
+      ],
+      "id": "3439a706-8dd5-4ffb-b38f-993794363f92",
+      "name": "Не валидный жсон",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3872,
+        16
+      ],
+      "id": "6d421956-0fc3-4b65-8a86-a8c5874b0608",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aefe8ca6-5c17-4a9c-8764-9426dff9b3b9",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "53d10f1a-8343-40c1-bbcc-20b9a10363d5",
+      "name": "start_time"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de975bbf-a931-493d-ae14-29c5e111fc45",
+              "name": "=runtime",
+              "value": "={{ ($now - Date.parse($('start_time').item.json.timestamp)) / 1000}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3456,
+        720
+      ],
+      "id": "806336f0-6d83-4770-97ec-e32565a518c1",
+      "name": "non_valid_json & runtime"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f3a9b91-5e05-4e7f-b0ac-3fa7fed4be12",
+              "name": "is_empty_output",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "875d5865-9c55-411a-89aa-85417e2cdcb0",
+              "name": "is_valid_json",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "468b7513-9161-4c9a-b755-cb2920e54812",
+              "name": "success",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "a4075566-0877-4bb0-aeec-c684578659e8",
+              "name": "runtime",
+              "value": "={{ ($now - Date.parse($('start_time').all()[0].json.timestamp)) / 1000 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3008,
+        -176
+      ],
+      "id": "ad51da71-ccaf-46ca-b3b1-d790b548d632",
+      "name": "Success"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3456,
+        -176
+      ],
+      "id": "167fc60b-7466-4407-85a1-87afbdfb52d0",
+      "name": "Merge success output"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3456,
+        16
+      ],
+      "id": "c67692f3-4277-4167-90b0-90d6412915fe",
+      "name": "Merge code output"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2624,
+        -176
+      ],
+      "id": "4567786f-a230-4762-9cce-8e6c560df3e8",
+      "name": "Merge success output1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем входные данные\nconst items = $input.all();\n\n// Создаем массив для результатов\nlet result = [];\n\n// Проходим по всем элементам\nitems.forEach((item, index) => {\n  // Проверяем, что data существует и является массивом\n  if (item.json.data && Array.isArray(item.json.data)) {\n    // Создаем новый массив для обработанных данных\n    const processedData = [];\n    \n    // Обрабатываем каждый элемент в data\n    item.json.data.forEach((dataItem, dataIndex) => {\n      // Создаем новый объект с порядковым id\n      const newItem = {\n        id: processedData.length + 1, // Порядковый id с шагом 1\n        text: dataItem.text || \"\" // Оставляем только текст\n      };\n      processedData.push(newItem);\n    });\n    \n    // Создаем новый объект с сохраненной структурой\n    result.push({\n      data: processedData\n    });\n  }\n});\n\n// Возвращаем результат\nreturn result.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        16
+      ],
+      "id": "9974db26-57a7-486e-a1a9-7544fc112eee",
+      "name": "Id for LLM"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst originalData = items[0];\nconst llmResult = items[1];\n\nconst llmOutput = llmResult.json.output;\nconst parsed = JSON.parse(llmOutput);\nconst llmData = parsed.data;\n\nconst result = [];\n\nfor (let i = 0; i < originalData.json.data.length; i++) {\n  const originalItem = originalData.json.data[i];\n  const llmItem = llmData[i];\n  \n  result.push({\n    chat_id: originalItem.chat_id,\n    message_id: originalItem.message_id,\n    text: originalItem.text,\n    llm_processed: true,\n    llm_is_relevant: llmItem.llm_is_relevant\n  });\n}\n\nreturn [{\n  json: {\n    data: result\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        16
+      ],
+      "id": "13d2d310-f642-4f36-ab84-34cb235ff82b",
+      "name": "Data from LLM Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items || items.length === 0) {\n  return [];\n}\n\nconst results = [];\n\nfor (const item of items) {\n  try {\n    // Получаем массив данных из входных\n    let dataArray;\n    \n    if (item.json && item.json.data && Array.isArray(item.json.data)) {\n      dataArray = item.json.data;\n    } else if (Array.isArray(item.json)) {\n      dataArray = item.json;\n    } else {\n      console.log('Unsupported format: data not found');\n      continue;\n    }\n    \n    // Обработка массива данных\n    if (Array.isArray(dataArray)) {\n      for (const dataItem of dataArray) {\n        if (!dataItem || typeof dataItem !== 'object') {\n          continue;\n        }\n        \n        // Проверка llm_is_relevant\n        if (dataItem.llm_is_relevant === undefined) {\n          console.log('Skipping item: missing llm_is_relevant field');\n          continue;\n        }\n        \n        // Преобразуем llm_is_relevant в boolean\n        let isRelevant;\n        try {\n          if (typeof dataItem.llm_is_relevant === 'boolean') {\n            isRelevant = dataItem.llm_is_relevant;\n          } else if (typeof dataItem.llm_is_relevant === 'string') {\n            const str = dataItem.llm_is_relevant.toLowerCase().trim();\n            isRelevant = str === 'true' || str === '1' || str === 'yes' || str === 'да';\n          } else if (typeof dataItem.llm_is_relevant === 'number') {\n            isRelevant = dataItem.llm_is_relevant !== 0;\n          } else {\n            isRelevant = false;\n          }\n        } catch (e) {\n          console.log('Error converting llm_is_relevant to boolean, using false');\n          isRelevant = false;\n        }\n        \n        // Проверка chat_id\n        let chatId;\n        if (dataItem.chat_id !== undefined && dataItem.chat_id !== null) {\n          chatId = parseInt(dataItem.chat_id);\n          if (isNaN(chatId)) {\n            console.log('Skipping item: invalid chat_id');\n            continue;\n          }\n        } else {\n          console.log('Skipping item: missing chat_id');\n          continue;\n        }\n        \n        // Проверка message_id\n        let messageId;\n        if (dataItem.message_id !== undefined && dataItem.message_id !== null) {\n          messageId = parseInt(dataItem.message_id);\n          if (isNaN(messageId)) {\n            console.log('Skipping item: invalid message_id');\n            continue;\n          }\n        } else {\n          console.log('Skipping item: missing message_id');\n          continue;\n        }\n        \n        // Добавляем элемент в результаты как отдельный item БЕЗ text\n        results.push({\n          json: {\n            chat_id: chatId,\n            message_id: messageId,\n            llm_processed: dataItem.llm_processed || true,\n            llm_is_relevant: isRelevant\n          }\n        });\n      }\n    }\n    \n  } catch (error) {\n    console.error('Processing error:', error.message);\n  }\n}\n\nconsole.log('Total results:', results.length);\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        16
+      ],
+      "id": "ea75a841-6a22-483e-920f-cf515125a6ef",
+      "name": "Разделение элементов агрегации"
+    },
+    {
+      "parameters": {
+        "content": "## Запуск ворфклоу\nПорядок выполнения:\n1) Старт таймера работы воркфлоу.\n2) Сбор записей из БД. Количество принимаемых данных указано в ноде Postgre.\n3) Разделение входных данных на батчи в цикле. Количество элементов в батче указываетсе в ноде цикла. Для тестового прохода по всему циклу необходимо выполнить ноду No Operation, do nothing.\n4) Объединение элементов батча в единый массив.",
+        "height": 576,
+        "width": 1184
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -320
+      ],
+      "id": "6eb9f061-15cb-4ba7-9b03-d6825a4c73cb",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Передача данных в LLM и валидация выходных данных от LLM\nПорядок выполнения:\n1) Подготовка информации для будущего объединения идентификаторов с результатом анализа LLM в ноде Info for LLM.\n2) Упрощение входных данных для LLM и снижение количества входных токенов в запросе в ноде Id for LLM.\n3) Выполнение запроса моделью в ноде OpenRouter Chat Model. Промпт находится в ноде AI Agent.\n4) Проверка корректности формата JSON и выходных данных на отсутствие пустого ответа.",
+        "height": 704,
+        "width": 1328
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        -336
+      ],
+      "id": "a00bfad1-0b4a-4ea1-8319-3d8a77add860",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-mini:free",
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "presencePenalty": 0,
+          "temperature": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        224
+      ],
+      "id": "8b2c9054-abbb-460a-8d2b-c0e53d7c426d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nIPKB3lCGZowVO4y",
+          "name": "OpenRouter account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Объединение ответа модели и выполнение запроса в БД.\nПорядок выполнения:\n.1. Объединение данных из LLM с идентификаторами в ноде Data from LLM Merge.\n.2.1. Разделение элементов батча.\n.2.2. Окончание таймера работы воркфлоу.\n.3. Фильтр на успешность выполнения обеих предыдущих нод, каждый мёрдж берёт соответствующие выходные данные.\n.4.1 Добавление записи в Гугл таблицы.\n.4.2. Подготовка параметрического SQL запроса.\n.5. Фильтр на успешное выполнение.\n6. Выполнение запроса в БД.",
+        "height": 640,
+        "width": 1632
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2608,
+        -416
+      ],
+      "id": "0aa63421-d432-401d-aa85-cdd0fd5b2405",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Добавление записи о неудачном выполнении воркфлоу\n- Пустые выходные данные от LLM\n- Не валидный JSON",
+        "height": 688,
+        "width": 880,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        240
+      ],
+      "id": "d9dbbd82-f86b-4720-8dd4-2d33847f1fbb",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "JSON validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Объединить элементы в батч": {
+      "main": [
+        [
+          {
+            "node": "Info for LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка SQL-запроса": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Цикл для батчинга элементов": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Объединить элементы в батч",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сбор записей, не обработанных LLM": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обновление записей": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "start_time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON validation": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Info for LLM": {
+      "main": [
+        [
+          {
+            "node": "Id for LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge success output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If JSON is valid and output != \"\"": {
+      "main": [
+        [
+          {
+            "node": "Merge success output1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Empty output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If JSON is valid and output != \"\"",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "non_valid_json & runtime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty output": {
+      "main": [
+        [
+          {
+            "node": "Пустой выход",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Пустой выход": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Не валидный жсон": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Успех": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Обновление записей",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing2": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start_time": {
+      "main": [
+        [
+          {
+            "node": "Сбор записей, не обработанных LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "non_valid_json & runtime": {
+      "main": [
+        [
+          {
+            "node": "Не валидный жсон",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Merge success output",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge code output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge success output": {
+      "main": [
+        [
+          {
+            "node": "Успех",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge code output": {
+      "main": [
+        [
+          {
+            "node": "Подготовка SQL-запроса",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge success output1": {
+      "main": [
+        [
+          {
+            "node": "Data from LLM Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Id for LLM": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data from LLM Merge": {
+      "main": [
+        [
+          {
+            "node": "Разделение элементов агрегации",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разделение элементов агрегации": {
+      "main": [
+        [
+          {
+            "node": "Merge success output",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge code output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Cuotassx3PEelIog"
+  },
+  "versionId": "8819f51d-7623-4148-b35b-d3d7e1dc2103",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "TjIFlOPF1naSOwLK",
+  "tags": []
+}

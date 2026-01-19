@@ -1,0 +1,56 @@
+services:
+  ls.telepilot.co:
+    image: hashicorp/http-echo:latest
+    command: ["-text", "{\"YARN_VERSION\": \"1.0.0\"}", "-listen=:4413"]
+    ports:
+      - 4413:4413
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    volumes:
+      - db_storage:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    build: .
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: always
+    # command: start --tunnel создание тунеля для использования вебхуков в триггер нодах,
+    # который перенаправляет запросы с серверов n8n на локалхост, небезопасно, в проде не использовать
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - GENERIC_TIMEZONE=Europe/Moscow
+      - TZ=Europe/Moscow
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - N8N_COMMUNITY_PACKAGES_PREVENT_LOADING_INTERNAL=false
+    ports:
+      - 5678:5678
+    links:
+      - postgres
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n-output:/home/node/.n8n-files
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  db_storage:
+  n8n_storage:

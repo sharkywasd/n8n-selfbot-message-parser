@@ -1,0 +1,625 @@
+{
+  "name": "Session Control",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6d1dfa28-1680-4ada-9b57-815b7f7a98fb",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -2096,
+        128
+      ],
+      "webhookId": "e03aaa29-25f0-41a6-ac38-4530aeea2855",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "# Supported Commands\nFollowing commands can be used in Chat:\n\n`/start` - start login via Phone Number and code (MFA is also supported if set)\n`/stop` - terminates current ClientSession for this Credential\n`/clear` - deletes local tdlib database, new login is required\n`/cred` - shows which Telegram Credential is used in this ChatTrigger (name + apiId, apiHash, phoneNumber)\n`/stat` - print all open Telegram sessions",
+        "height": 408,
+        "width": 724
+      },
+      "id": "3ab1ebb4-d047-4d93-ad84-447fadb28548",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2160,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "d88bc99f-ffa6-4212-9590-4dfa5f17731f",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -2096,
+        -288
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "c30ecb0c-4ace-4fcc-9139-0dc900e11991",
+      "name": "Stop auth",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -976,
+        -144
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "67b1df13-b6bb-4ef4-8b05-866a0e1f158e",
+      "name": "Start auth",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -976,
+        80
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Automatic Reconnect",
+        "height": 692,
+        "width": 480
+      },
+      "id": "a2ad348c-b1b9-41da-8367-78bd41b3bb97",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1248,
+        -208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "58231b99-85bf-4914-b06e-ef898e2f51c9",
+      "name": "Manual control",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -1872,
+        128
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "11a27c1a-b4ec-4874-9a5c-8e079d919dd4",
+      "name": "Automatic control",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -1648,
+        -288
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $json.sessionId }}"
+            },
+            {
+              "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
+              "name": "action",
+              "type": "string",
+              "value": "sendMessage"
+            },
+            {
+              "id": "a35ef9f8-1dfc-4e34-a347-de6542358aad",
+              "name": "chatInput",
+              "type": "string",
+              "value": "/stat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdc1049f-3bfd-41ca-ab10-c9edcfad21e2",
+      "name": "Get Session Status",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1872,
+        -288
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
+              "name": "sessionId",
+              "type": "string",
+              "value": "67a853b868cd4f06a0113163ec8b2458"
+            },
+            {
+              "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
+              "name": "action",
+              "type": "string",
+              "value": "sendMessage"
+            },
+            {
+              "id": "a35ef9f8-1dfc-4e34-a347-de6542358aad",
+              "name": "chatInput",
+              "type": "string",
+              "value": "/stop"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae7562e8-4564-4e7f-bb1b-1dcbb1094358",
+      "name": "Stop Session",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1184,
+        -144
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
+              "name": "sessionId",
+              "type": "string",
+              "value": "67a853b868cd4f06a0113163ec8b2458"
+            },
+            {
+              "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
+              "name": "action",
+              "type": "string",
+              "value": "sendMessage"
+            },
+            {
+              "id": "a35ef9f8-1dfc-4e34-a347-de6542358aad",
+              "name": "chatInput",
+              "type": "string",
+              "value": "/start"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4cfad3a8-4462-40a8-8bae-0791e533ee04",
+      "name": "Start Session",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1184,
+        80
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "08f33e60-eafc-4270-94ab-5f26549ea4d3",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json[0].authState }}",
+              "rightValue": "authorizationStateReady"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ad9eeb5a-5ba8-49f5-abc5-59b6c4957d70",
+      "name": "Pass on Closed Status",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -1424,
+        -288
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "08f33e60-eafc-4270-94ab-5f26549ea4d3",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json[0].authState }}",
+              "rightValue": "authorizationStateReady"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eafd22aa-7830-4eca-bf79-8a1e56f49520",
+      "name": "Check Session Connection",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -1184,
+        320
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "# Automatic Session Check",
+        "height": 224,
+        "width": 880
+      },
+      "id": "a8567054-6a20-475f-bdeb-b3e969772e3f",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2160,
+        -352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "297709048",
+        "text": "=❌ {{ $('Automatic control').item.json[0].phoneNumber }} UserBot Error:\n{{ $json.toJsonString() }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "954e6f54-8252-4971-bc15-46415c9731a4",
+      "name": "BOT Send Closed Status message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1184,
+        -624
+      ],
+      "webhookId": "231c216e-646c-45e3-a3ca-145d48ca7e8d",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZEr6JlBlLJEvRbyV",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "messageText": "=❌ {{ $('Automatic control').item.json[0].phoneNumber }} UserBot Error: {{ $json.toJsonString() }}",
+        "message_thread_id": 0
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        -416
+      ],
+      "id": "570fe717-5f12-4b92-9186-c29217a07c6c",
+      "name": "Send Status Closed",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "297709048",
+        "text": "=✅ Lesnikov UserBot Info:\n{{ $json.toJsonString() }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "72746fa0-5f0c-4936-9279-020a42b8eaf5",
+      "name": "BOT Send Session Connection message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -976,
+        512
+      ],
+      "webhookId": "f61ba988-2a26-4d07-87b6-9ef9e9eab2bc",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZEr6JlBlLJEvRbyV",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "messageText": "=✅ UserBot Info:\n{{ $json.toJsonString() }}",
+        "message_thread_id": 0
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        320
+      ],
+      "id": "35b847e0-bd13-4f84-aca1-0ab816e42473",
+      "name": "Send Session Recconect",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Инструкция по входу и работе воркфлоу\n1. Нажимаем на триггер Open chat\n2. Вводим `/start` в чат\n3. Вводим код аутентификации\n4. Вводим облачный пароль\n5. Для обновления сессии используется автоматическая проверка и реконнект.\n\nДля завершения сессии и полного выхода из неё необходимо:\n1. Написать в чат `/stop`\n2. Написать в чат `/clear`\n\nДля корректной работы воркфлоу необходимо настроить:\n- Credentials для Telepilot (api_id & api_hash с сайта после создания нового приложения https://my.telegram.org/auth)\n- Chat_id в нодах \"Send Status Closed\" и \"Send Session Recconect\", в который будет отправляться сообщение о статусе сессии. Если это группа с несколькими тредами - указать айди треда, в который необходимо отправить сообющение.\n- `session_id` при каждой новой сессии в ноде \"Get Session Status\"\n\nПосле настройки воркфлоу при закрытии сессии будет приходить сообщение о её закрытии, сессия будет снова запускаться и при успехе будет отправлено соответствующее сообщение..\nТакже можно настроить для отправки сообщений обычного бота от Telegram (ноды с префиксом BOT)\n\nБыстрые способы получения ID чата:\n- Telepilot нода Search public chat by username/title для каналов и групп.\n- Telepilot нода-триггер On new message: добавляете в воркфлоу, запускаете, отправляете сообщение с со своего аккаунта/получаете сообщение с необходимого аккаунта.\nАльтернативный способ - использовать воркфлоу Channel_ID_Parser",
+        "height": 608,
+        "width": 752,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        336
+      ],
+      "id": "348da58b-7c5b-4ad2-8730-fb5c51b69924",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "b81685e7-d2ac-4eb9-a4b7-6a693bc24a7e",
+      "name": "Manual control1",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -1936,
+        -624
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2112,
+        -624
+      ],
+      "id": "d2a54dc3-25c8-4ed4-b5ad-1eeb2a03f4d9",
+      "name": "Extract from File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Stop auth": {
+      "main": [
+        [
+          {
+            "node": "Start Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start auth": {
+      "main": [
+        [
+          {
+            "node": "Check Session Connection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop Session": {
+      "main": [
+        [
+          {
+            "node": "Stop auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Session": {
+      "main": [
+        [
+          {
+            "node": "Start auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Session Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Automatic control": {
+      "main": [
+        [
+          {
+            "node": "Pass on Closed Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session Status": {
+      "main": [
+        [
+          {
+            "node": "Automatic control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass on Closed Status": {
+      "main": [
+        [
+          {
+            "node": "Stop Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Status Closed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Session Connection": {
+      "main": [
+        [
+          {
+            "node": "Send Session Recconect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Manual control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual control": {
+      "main": [
+        []
+      ]
+    },
+    "Manual control1": {
+      "main": [
+        []
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Manual control1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ac891f0e-11a6-4a00-b9a9-38cad9781832",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "PKw7RHQSOqcErwZb",
+  "tags": []
+}

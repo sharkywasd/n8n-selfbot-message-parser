@@ -1,0 +1,301 @@
+{
+  "name": "Chat_Opener_10_minutes",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "openChat",
+        "chat_id": "={{ $json.Channel_ID }}"
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        896,
+        112
+      ],
+      "id": "4792d611-0969-4bd1-9f7a-4914f560b9a9",
+      "name": "Open chat",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 962513866,
+          "mode": "list",
+          "cachedResultName": "GetChannelIDs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:C"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "c36cf451-6e4e-4599-b975-ed7d5a6581ef",
+      "name": "Get target chat_ids",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        576,
+        -32
+      ],
+      "id": "fcfd2008-7190-4dad-8353-5c170ae3883b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.random() * 1 + 1}}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        112
+      ],
+      "id": "c379cafc-c1b1-47d1-a168-f67887610399",
+      "name": "Wait",
+      "webhookId": "56b4fafe-abfc-4225-a85b-53c118fda699"
+    },
+    {
+      "parameters": {
+        "operation": "closeChat",
+        "chat_id": "={{ $('Loop Over Items').item.json.Channel_ID }}"
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        112
+      ],
+      "id": "741fdaab-bb9e-4e9d-ae66-fb2750e56c80",
+      "name": "Close chat",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.random() * 1 + 2}}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1536,
+        112
+      ],
+      "id": "56996c6f-4818-4e3c-b916-cac97f061a18",
+      "name": "Wait1",
+      "webhookId": "e4e2ff81-7585-4e10-a5b1-9dfae38f8689"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f43c84b3-cf0b-498d-8365-027e064e3c8f",
+              "leftValue": "={{ [-1001481574785, -1001669426155, -1002691668415] }}",
+              "rightValue": "={{ $json.Channel_ID }}",
+              "operator": {
+                "type": "array",
+                "operation": "notContains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        -32
+      ],
+      "id": "dcbe7605-b5ad-43e1-8290-5d15f92e0cf5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */10 * * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        -32
+      ],
+      "id": "93452ff7-31e3-482e-a735-ba7fc606adaa",
+      "name": "Every 10 minutes Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## Воркфлоу для получения обновлений из чатов\nИспользуется для чатов с большим количеством сообещний и частыми обновлениями. Список каналов передаётся через Set ноду Chat_ids.\nКаждые [10] минут открывается и закрываются чаты из листа в Google Sheets, что позволяет получить обновления из телеграма.\n\nРекомендуемая структура листа: лист с результатами парсинга индентификаторов чатов с параметром Data Location on Sheet (в моём случае - B1:C для получения юзернеймов и индентификаторов чатов)\nIf нода используется для фильтрации каналов, которые используются в воркфлоу с открытием чатов каждые 3 минуты, они исключаются из массива элементов в данном форкфлоу. ",
+        "height": 192,
+        "width": 1120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -256
+      ],
+      "id": "eb09592b-9e9d-4ae8-b0ad-aa1b45ad8cb0",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Open chat": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Open chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Close chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close chat": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get target chat_ids": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 10 minutes Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get target chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Cuotassx3PEelIog"
+  },
+  "versionId": "b5f89b02-5af7-419b-add6-1067b9bdec76",
+  "meta": {
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "E7zCiXNdVBgDqGXiaelQ2",
+  "tags": []
+}
