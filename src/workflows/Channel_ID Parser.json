@@ -3,47 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "custom",
-              "cronExpression": "* * 21 * * *"
-            }
-          ]
-        },
-        "documentId": {
-          "__rl": true,
-          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
-          "mode": "list",
-          "cachedResultName": "Palatine-selfbot-parser",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1224483548,
-          "mode": "list",
-          "cachedResultName": "PasteChannelLinks",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1224483548"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheetsTrigger",
-      "typeVersion": 1,
-      "position": [
-        384,
-        0
-      ],
-      "id": "b57caf5b-a1f7-4ec2-bf11-645769a169c8",
-      "name": "Google Sheets Trigger",
-      "credentials": {
-        "googleSheetsTriggerOAuth2Api": {
-          "id": "4m4boBmcNiGrrXCH",
-          "name": "Google Sheets Trigger account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "searchPublicChat",
         "username": "={{ $json.values()[0] }}"
       },
@@ -74,7 +33,8 @@
       ],
       "id": "2cd49df4-6a43-4da9-9885-3c3a0b5c6062",
       "name": "Wait2",
-      "webhookId": "dd357782-4ca2-4b45-867b-fe7da32d9b19"
+      "webhookId": "dd357782-4ca2-4b45-867b-fe7da32d9b19",
+      "notes": "Умеренное использование Telegram API во избежание санкций для аккаунта"
     },
     {
       "parameters": {
@@ -90,119 +50,17 @@
       "name": "Loop Over Items"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1056,
-        -160
-      ],
-      "id": "0594b3f7-9838-4a1c-8075-28fd0b004cb6",
-      "name": "No Operation, do nothing"
-    },
-    {
       "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
-          "__rl": true,
-          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
-          "mode": "list",
-          "cachedResultName": "Palatine-selfbot-parser",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 962513866,
-          "mode": "list",
-          "cachedResultName": "GetChannelIDs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [
-            "Channel_username"
-          ],
-          "schema": [
-            {
-              "id": "Channel_URL",
-              "displayName": "Channel_URL",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Channel_username",
-              "displayName": "Channel_username",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Channel_ID",
-              "displayName": "Channel_ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Channel_Title",
-              "displayName": "Channel_Title",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Insatnce_ID",
-              "displayName": "Insatnce_ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        1504,
-        16
-      ],
-      "id": "52393d6e-bc85-43d0-8288-889fc22bc03b",
-      "name": "Append or update row in sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "c2HhsYLQ928pUJFE",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Воркфлоу для обработки ссылок чатов\nСохраняет информацию по каналу в гугл таблицы.\n\nНеобходимы credential из Google Cloud Console и настройка листов\n\nПредлагаемая структура листов:\n1. PasteChannelLinks - лист для вставки ссылок каналов. Столбцы: URLs.\n2. GetChannelIDs - лист для сохранения метаданных по каналам. Этот же лист может использоваться в воркфлоу для поиска по ключам. Столбцы (опционально): Channel_URL, Channel_username, Channel_ID, Channel_Title.\n\nНабор данных о чате настраивается в ноде \"Данные о чате\".\nИнформация о чате обновляется или добавляется, если такой записи не было.\nТриггер стоит на изменения на листе PasteChannelLinks.\n\nДля тестового выполнения циклы использовать ноду No Operation, do nothing",
-        "height": 368,
+        "content": "## Воркфлоу для обработки ссылок чатов\nСохраняет информацию по каналу в гугл таблицы.\n\nНеобходимы credential из Google Cloud Console и настройка листов\n\nПредлагаемая структура листов:\n1. `PasteChannelLinks` - лист для вставки ссылок каналов. Столбцы: `URLs`.\n2. `GetChannelIDs` - лист для сохранения метаданных по каналам. Этот же лист может использоваться в воркфлоу для поиска по ключам. Столбцы (опционально): `Channel_URL`, `Channel_username`, `Channel_ID`, `Channel_Title`.\n\nНабор данных о чате настраивается в ноде `Данные о чате`.\nИнформация о чате обновляется или добавляется, если такой записи не было.\nТриггер стоит на изменения на листе `PasteChannelLinks`.\n\nДля тестового выполнения циклы использовать ноду `Execute me to test Workflow`\n\nПериодичность проверки обновления данных(новых ссылок для обработки) на листе `PasteChannelLinks` настраивается в ноде Гугл Таблиц `Paste channel links to parse` с помощью параметра `Poll time`.\n",
+        "height": 432,
         "width": 768,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -432,
-        -96
+        -480,
+        -144
       ],
       "id": "9485c51a-5015-49ef-a4e3-4de49a7d5d79",
       "name": "Sticky Note"
@@ -255,26 +113,155 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        640,
+        608,
         0
       ],
       "id": "a9e1a343-8445-4ade-84c9-c512e643c518",
-      "name": "trim_url"
+      "name": "trim_url",
+      "notes": "Обрезка URL для получения username"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 962513866,
+          "mode": "list",
+          "cachedResultName": "GetChannelIDs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Channel_URL",
+              "displayName": "Channel_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Channel_username",
+              "displayName": "Channel_username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Channel_ID",
+              "displayName": "Channel_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Channel_Title",
+              "displayName": "Channel_Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Insatnce_ID",
+              "displayName": "Insatnce_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        16
+      ],
+      "id": "52393d6e-bc85-43d0-8288-889fc22bc03b",
+      "name": "GetChannelIDs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -160
+      ],
+      "id": "0594b3f7-9838-4a1c-8075-28fd0b004cb6",
+      "name": "Execute me to test Workflow"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-parser",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1224483548,
+          "mode": "list",
+          "cachedResultName": "PasteChannelLinks",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1224483548"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "b57caf5b-a1f7-4ec2-bf11-645769a169c8",
+      "name": "Paste channel links to parse",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "4m4boBmcNiGrrXCH",
+          "name": "Google Sheets Trigger account"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
-    "Google Sheets Trigger": {
-      "main": [
-        [
-          {
-            "node": "trim_url",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Search public chat by username": {
       "main": [
         [
@@ -301,7 +288,7 @@
       "main": [
         [
           {
-            "node": "No Operation, do nothing",
+            "node": "Execute me to test Workflow",
             "type": "main",
             "index": 0
           }
@@ -315,22 +302,11 @@
         ]
       ]
     },
-    "Append or update row in sheet": {
-      "main": [
-        [
-          {
-            "node": "Wait2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Данные о чате": {
       "main": [
         [
           {
-            "node": "Append or update row in sheet",
+            "node": "GetChannelIDs",
             "type": "main",
             "index": 0
           }
@@ -347,6 +323,28 @@
           }
         ]
       ]
+    },
+    "GetChannelIDs": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paste channel links to parse": {
+      "main": [
+        [
+          {
+            "node": "trim_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -354,7 +352,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "38399b81-0121-4d24-aa73-d2fb0d4f7887",
+  "versionId": "a8a16448-afd0-47b8-b9f4-1eecf94c38e3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"

@@ -9,8 +9,8 @@
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        896,
-        112
+        848,
+        96
       ],
       "id": "4792d611-0969-4bd1-9f7a-4914f560b9a9",
       "name": "Open chat",
@@ -32,10 +32,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 962513866,
+          "value": 551023132,
           "mode": "list",
-          "cachedResultName": "GetChannelIDs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+          "cachedResultName": "SlowChatsOpener",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=551023132"
         },
         "options": {
           "dataLocationOnSheet": {
@@ -68,8 +68,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        576,
-        -32
+        528,
+        -48
       ],
       "id": "fcfd2008-7190-4dad-8353-5c170ae3883b",
       "name": "Loop Over Items"
@@ -81,8 +81,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1104,
-        112
+        1056,
+        96
       ],
       "id": "c379cafc-c1b1-47d1-a168-f67887610399",
       "name": "Wait",
@@ -96,8 +96,8 @@
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        1312,
-        112
+        1264,
+        96
       ],
       "id": "741fdaab-bb9e-4e9d-ae66-fb2750e56c80",
       "name": "Close chat",
@@ -115,46 +115,12 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1536,
-        112
+        1488,
+        96
       ],
       "id": "56996c6f-4818-4e3c-b916-cac97f061a18",
       "name": "Wait1",
       "webhookId": "e4e2ff81-7585-4e10-a5b1-9dfae38f8689"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "f43c84b3-cf0b-498d-8365-027e064e3c8f",
-              "leftValue": "={{ [-1001481574785, -1001669426155, -1002691668415] }}",
-              "rightValue": "={{ $json.Channel_ID }}",
-              "operator": {
-                "type": "array",
-                "operation": "notContains",
-                "rightType": "any"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        272,
-        -32
-      ],
-      "id": "dcbe7605-b5ad-43e1-8290-5d15f92e0cf5",
-      "name": "If"
     },
     {
       "parameters": {
@@ -178,18 +144,91 @@
     },
     {
       "parameters": {
-        "content": "## Воркфлоу для получения обновлений из чатов\nИспользуется для чатов с большим количеством сообещний и частыми обновлениями. Список каналов передаётся через Set ноду Chat_ids.\nКаждые [10] минут открывается и закрываются чаты из листа в Google Sheets, что позволяет получить обновления из телеграма.\n\nРекомендуемая структура листа: лист с результатами парсинга индентификаторов чатов с параметром Data Location on Sheet (в моём случае - B1:C для получения юзернеймов и индентификаторов чатов)\nIf нода используется для фильтрации каналов, которые используются в воркфлоу с открытием чатов каждые 3 минуты, они исключаются из массива элементов в данном форкфлоу. ",
-        "height": 192,
-        "width": 1120
+        "content": "## Воркфлоу для получения обновлений из чатов\nИспользуется для чатов с большим количеством сообещний, но не частыми обновлениями. Список каналов передаётся через Google Sheets ноду `Get target chat_ids`.\nКаждые [10] минут открывается и закрываются чаты из листа в Google Sheets, что позволяет получить обновления из телеграма.\n\nРекомендуемая структура листа `SlowChatsOpener`: лист с результатами парсинга индентификаторов чатов с параметром `Data Location` on Sheet (в моём случае и в случае использования данных из эксель файла `Palatine-selfbot-n8n` - B1:C для получения юзернеймов и индентификаторов чатов).\nСтолбцы: `Channel_URL`, `Channel_username`, `Channel_ID`, `Channel_Title`, `Insatnce_ID`\n`Compare Datasets (Get Slow Chats)` нода используется для фильтрации каналов, которые используются в воркфлоу с открытием чатов каждые [3] минуты, они исключаются из массива элементов в данном workflow. Сработает только в случае, если лист \"FrequentChatsOpener\" не содержит chat_id \"медленных\" чатов.",
+        "height": 320,
+        "width": 848
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -208,
-        -256
+        -400
       ],
       "id": "eb09592b-9e9d-4ae8-b0ad-aa1b45ad8cb0",
       "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -288
+      ],
+      "id": "1015a0be-2a54-4635-847c-30c2d34e9a1b",
+      "name": "Execute me to test Workflow"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1536316354,
+          "mode": "list",
+          "cachedResultName": "FrequentChatsOpener",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1536316354"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:C"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        144
+      ],
+      "id": "f990f763-1062-478b-b9df-a0c6fcc300aa",
+      "name": "Get frequent chat_ids",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "Channel_ID",
+              "field2": "Channel_ID"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "5847f677-03d2-4348-9cbb-27748fa5a972",
+      "name": "Compare Datasets (Get Slow Chats)"
     }
   ],
   "pinData": {},
@@ -207,7 +246,13 @@
     },
     "Loop Over Items": {
       "main": [
-        [],
+        [
+          {
+            "node": "Execute me to test Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Open chat",
@@ -254,18 +299,7 @@
       "main": [
         [
           {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
+            "node": "Compare Datasets (Get Slow Chats)",
             "type": "main",
             "index": 0
           }
@@ -277,6 +311,33 @@
         [
           {
             "node": "Get target chat_ids",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get frequent chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get frequent chat_ids": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets (Get Slow Chats)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare Datasets (Get Slow Chats)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -292,8 +353,9 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "Cuotassx3PEelIog"
   },
-  "versionId": "b5f89b02-5af7-419b-add6-1067b9bdec76",
+  "versionId": "e2581068-68e2-4e3b-b8a8-19a117f04a1e",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
   },
   "id": "E7zCiXNdVBgDqGXiaelQ2",

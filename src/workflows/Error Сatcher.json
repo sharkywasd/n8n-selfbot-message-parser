@@ -15,7 +15,6 @@
     {
       "parameters": {
         "resource": "message",
-        "chat_id": "297709048",
         "messageText": "={{ $json.execution.id }};{{ $json.execution.url }}\n{{ $json.execution.error.message }};{{ $json.execution.error.stack }}\n{{ $json.execution.mode }};\n{{ $json.workflow.id }};{{ $json.workflow.name }}",
         "message_thread_id": 0
       },
@@ -64,6 +63,21 @@
     },
     {
       "parameters": {
+        "content": "## Воркфлоу для логгирования ошибок исполнения воркфлоу\nЗаписывает ошибки выполнения в определённый лист на Гугл таблицах или отправляет сообщение в админский чат (требуется указание админского ID чата)\n\nДля теста workflow нажать кнопку `Execute workflow`. При отсутствии ошибки в течение 1 минуты, тестовая проверка выключится. Можно создать тестовые данные ошибки внутри ноды `Error Trigger` используя кнопку `set mock data`.\n\nЛогирование ошибок можно записывать в Гугл Таблицы или отправлять в админский чат (чат, в который приходят сообщения об анализе сообщений при помощи LLM). \n\nДля записи ошибок выполнения workflow можно использовать лист LLM_Parser_log или создать отдельный лист под ошибки, например, Workflow_exec_Errors\n\nДля отправки сообщения в админский чат необходимо указать chat_id  в ноде `Send text message`",
+        "height": 320,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -528
+      ],
+      "id": "8acb4475-89a3-4ccf-a168-aad32b2a279d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -74,89 +88,16 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1302155247,
+          "value": 1720353948,
           "mode": "list",
-          "cachedResultName": "ModelsTests",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1302155247"
+          "cachedResultName": "Workflow_exec_Errors",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1720353948"
         },
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
           "matchingColumns": [],
-          "schema": [
-            {
-              "id": "is_empty_output",
-              "displayName": "is_empty_output",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "is_valid_json",
-              "displayName": "is_valid_json",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "success",
-              "displayName": "success",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "runtime",
-              "displayName": "runtime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Model",
-              "displayName": "Model",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Run",
-              "displayName": "Run",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "#1 Run",
-              "displayName": "#1 Run",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "#2 Run",
-              "displayName": "#2 Run",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -169,28 +110,13 @@
         0
       ],
       "id": "ad7ee21a-9b4c-4ab9-9ca6-b1c529d3a2b4",
-      "name": "Append row in sheet",
+      "name": "Write error in GSheets cell",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "c2HhsYLQ928pUJFE",
           "name": "Google Sheets account"
         }
       }
-    },
-    {
-      "parameters": {
-        "content": "## Воркфлоу для логгирования ошибок исполнения воркфлоу\nЗаписывает ошибки выполнения в определённый лист на Гугл таблицах или отправляет сообщение в админский чат (требуется указание админского ID чата)",
-        "height": 272,
-        "width": 800
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        0,
-        -464
-      ],
-      "id": "8acb4475-89a3-4ccf-a168-aad32b2a279d",
-      "name": "Sticky Note"
     }
   ],
   "pinData": {},
@@ -211,7 +137,7 @@
         [],
         [
           {
-            "node": "Append row in sheet",
+            "node": "Write error in GSheets cell",
             "type": "main",
             "index": 0
           }
@@ -234,7 +160,7 @@
         ]
       ]
     },
-    "Append row in sheet": {
+    "Write error in GSheets cell": {
       "main": [
         [
           {
@@ -254,7 +180,7 @@
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "1b8e8c1b-e2c9-4031-846c-afbb14a6aad2",
+  "versionId": "e8f7a097-c3a0-41ec-b3e1-4869567721bf",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"

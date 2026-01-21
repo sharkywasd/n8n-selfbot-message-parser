@@ -3,82 +3,17 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 45
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        -1680,
-        464
-      ],
-      "id": "44bc5ea4-93f4-4419-9572-2cc64b8e4d90",
-      "name": "Schedule Trigger1"
-    },
-    {
-      "parameters": {
         "amount": "={{ Math.random() * 2 + 1 }}"
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1008,
-        176
+        1440,
+        160
       ],
       "id": "5b1e05fb-b44b-41fa-8b5e-72918ce6e825",
       "name": "Wait1",
       "webhookId": "942e777d-f062-41df-8bbd-48919c1630ff"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT *\nFROM telegram_messages\nWHERE llm_processed is TRUE AND llm_is_relevant is TRUE AND tg_sent IS FALSE\nLIMIT 10",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1456,
-        464
-      ],
-      "id": "2422e996-d6d5-4bd2-bbd7-3bdbcfb8fbf8",
-      "name": "Execute a SQL query",
-      "credentials": {
-        "postgres": {
-          "id": "4z4s5W8zN4Xuxx6b",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ed4b600f-7055-42ca-b7b9-d8c4bd926de2",
-              "name": "user_id",
-              "value": "={{ (parseInt($json.user_id || 0) > 0) ? $json.user_id : false }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -784,
-        320
-      ],
-      "id": "2945d8e4-7176-4e3a-b356-b6528ac69ddc",
-      "name": "Edit Fields"
     },
     {
       "parameters": {
@@ -98,56 +33,22 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1920,
-        464
+        2336,
+        560
       ],
       "id": "75f4188e-e5da-4934-9505-dcaad29a7e99",
       "name": "Успешное завершение итерации цикла"
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "045b8af1-43cf-4b14-8895-c1b41a308190",
-              "leftValue": "={{ $json.user_id }}",
-              "rightValue": false,
-              "operator": {
-                "type": "boolean",
-                "operation": "notEquals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "looseTypeValidation": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -560,
-        320
-      ],
-      "id": "1d09181c-645b-4632-b897-50708a758cd4",
-      "name": "If"
-    },
-    {
-      "parameters": {
         "operation": "getChat",
-        "chat_id": "=-1001481574785"
+        "chat_id": "={{ $json.chat_id }}"
       },
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        -336,
-        32
+        -784,
+        48
       ],
       "id": "1b6a3bbe-ac19-4148-b273-e36502120072",
       "name": "Get chat",
@@ -160,22 +61,9 @@
     },
     {
       "parameters": {
-        "numberInputs": 3
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        112,
-        160
-      ],
-      "id": "a4b505fa-6c3b-4d1f-a90a-5e7bf97002ca",
-      "name": "Merge1"
-    },
-    {
-      "parameters": {
         "resource": "user",
         "operation": "getUser",
-        "user_id": "=297709048"
+        "user_id": "={{ $json.user_id }}"
       },
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
@@ -194,77 +82,16 @@
     },
     {
       "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        336,
-        176
-      ],
-      "id": "93131fa1-1e76-4cdd-88fa-5c8bb4301d3e",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "d79bb212-c57d-452d-8071-e23e015dcc0e",
-              "name": "chat_title",
-              "value": "={{ $json.data[0].chat_title }}",
-              "type": "string"
-            },
-            {
-              "id": "09326d90-dcd4-4384-a907-72890742491e",
-              "name": "chat_id",
-              "value": "={{ $json.data[1].chat_id }}",
-              "type": "string"
-            },
-            {
-              "id": "8d92e51e-9798-4946-8ca5-c9ec9d186de3",
-              "name": "username",
-              "value": "={{ $json.data[2].usernames.active_usernames[0] }}",
-              "type": "string"
-            },
-            {
-              "id": "931ed774-2ece-44fd-9ee1-8109b244e5f8",
-              "name": "telegram_date",
-              "value": "={{ $json.data[1].telegram_date }}",
-              "type": "string"
-            },
-            {
-              "id": "f810b37f-fa37-4256-bfc7-d06e4e783cbe",
-              "name": "text",
-              "value": "={{ $json.data[1].text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        560,
-        176
-      ],
-      "id": "d63819bd-4d93-4a93-bc51-3211ef3acc29",
-      "name": "Get info"
-    },
-    {
-      "parameters": {
         "resource": "message",
         "chat_id": "=",
-        "messageText": "={{ JSON.stringify($input.first(), null, 2) }}",
+        "messageText": "=Получено новое релевантное сообщение\nИсточник: {{ $json.Chat }}\nОтправитель: {{ $json.username }}\n{{ $json.User_Name }}\nДата: {{ $json.telegram_date }}\nТекст: {{ $json.text }}",
         "message_thread_id": 0
       },
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        816,
-        176
+        848,
+        32
       ],
       "id": "f357dd4c-f8e5-4c6a-971f-4293fac5c81e",
       "name": "Send text message",
@@ -277,9 +104,9 @@
     },
     {
       "parameters": {
-        "content": "## Подготовка информации к отправке сообщения, прошедшего успешную проверку через LLM\nПроисходит сбор пользовательского юзернейма и названия канала.\nДля фильрации от случайного попадания идентификаторов каналов используется If нода. Обычно, идентификаторы групп и каналов начинаются с префикса \"-100...\".\nДля тестового выполнения цикла полностью необходимо выполнить ноду No Operation, do nothing.",
+        "content": "## Подготовка информации к отправке сообщения, прошедшего успешную проверку через LLM\nПроисходит сбор пользовательского юзернейма и названия канала.\nДля фильрации от случайного попадания идентификаторов каналов используются Set `user_id` и If  `If user_id exists` нода. Обычно, идентификаторы групп и каналов начинаются с префикса \"-100...\". Это происходит для того, чтобы сообщение, отправленное от лица канала не проходило отбор.\nДля тестового выполнения цикла полностью необходимо выполнить ноду `Execute me to test Workflow`.",
         "height": 672,
-        "width": 1776,
+        "width": 1792,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
@@ -299,8 +126,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1264,
-        368
+        1680,
+        464
       ],
       "id": "66683986-52b3-4de9-8702-9a10f7117534",
       "name": "Wait for Execution"
@@ -315,8 +142,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1424,
-        256
+        1840,
+        352
       ],
       "id": "da71a677-b9ad-429f-9b4a-3af2843d5b81",
       "name": "Sticky Note1"
@@ -332,8 +159,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1648,
-        368
+        2064,
+        464
       ],
       "id": "b52e4e6d-e0ef-4d0d-85fd-af0e4c5e486d",
       "name": "Обновление БД",
@@ -351,8 +178,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        368
+        1888,
+        464
       ],
       "id": "922fdfa9-1940-41b6-974b-723154b0d321",
       "name": "Подготовка SQL-запроса"
@@ -366,45 +193,11 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        736,
-        64
+        720,
+        -80
       ],
       "id": "d2b24e0e-ea87-4176-aa9f-136c47cdef2c",
       "name": "Sticky Note2"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        -1008,
-        -16
-      ],
-      "id": "ea4be6c0-9999-4b3b-bfba-343ef877f474",
-      "name": "No Operation, do nothing"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "936ec267-4596-4d6f-820a-f66cb3f7e949",
-              "name": "chat_title",
-              "value": "={{ $json.title }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -112,
-        32
-      ],
-      "id": "75e23dae-9e34-472a-90c3-165309519f9b",
-      "name": "Chat Title"
     },
     {
       "parameters": {
@@ -414,6 +207,12 @@
               "id": "317ce36e-eb21-444f-b02c-56f93568af97",
               "name": "usernames.active_usernames[0]",
               "value": "=@{{ $json.usernames.active_usernames[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "157427fd-d441-40fb-82a5-d87255b66b84",
+              "name": "name",
+              "value": "={{ ($json.first_name + ' ' + $json.last_name).trim() }}",
               "type": "string"
             }
           ]
@@ -465,40 +264,359 @@
       "typeVersion": 3.4,
       "position": [
         -1008,
-        160
+        176
       ],
       "id": "0100de0d-aa38-43c1-8b61-0c4c72aafd78",
       "name": "message_metadata"
     },
     {
       "parameters": {
-        "content": "## Запуск воркфлоу\nСбор сообщений, которые были обработаны и признаны релевантными LLM и которые ещё не были отправлены в админский чат.\n\nДля корректной работы неоходимо заполнить админский chat_id.\nПод админским чатом подразумевается chat_id из ноды Send text message. Указывается либо идентификатор чата с конкретным человеком, либо идентификатор канала/группы.\n\nWait нода используется для соблюдения разумных лимитов запросов к API Telegram.",
-        "height": 432,
-        "width": 464
+        "content": "## Запуск воркфлоу\nСбор сообщений, которые были обработаны и признаны релевантными LLM и которые ещё не были отправлены в админский чат.\n\nДля корректной работы неоходимо заполнить админский chat_id.\nПод админским чатом подразумевается чат, в который будут отправляться сообщения, признанные LLM релевантными.\nНеобходимо указать chat_id такого чата в ноде `Send text message`. Указывается либо идентификатор чата с конкретным человеком, либо идентификатор канала/группы.\n\nWait нода используется для соблюдения разумных лимитов запросов к API Telegram.\n\nБыстрые способы получения ID чата:\n- Telepilot нода `Search public chat by username/title` для каналов и групп.\n- Telepilot нода-триггер `On new message`: добавляете в workflow, запускаете, отправляете сообщение с со своего аккаунта/получаете сообщение с необходимого аккаунта.\nАльтернативный способ - использовать workflow `Channel_ID_Parser`\n\nПериодичность запуска workflow настраивается в ноде `Schedule Trigger`, по умолчанию - каждые 45 минут.",
+        "height": 784,
+        "width": 496
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1760,
-        176
+        -1792,
+        -112
       ],
       "id": "25f78d32-bf2f-44f2-8373-e13aa55851e4",
       "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "045b8af1-43cf-4b14-8895-c1b41a308190",
+              "leftValue": "={{ $json.user_id }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -560,
+        320
+      ],
+      "id": "1d09181c-645b-4632-b897-50708a758cd4",
+      "name": "If user_id exists"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed4b600f-7055-42ca-b7b9-d8c4bd926de2",
+              "name": "user_id",
+              "value": "={{ (parseInt($json.user_id || 0) > 0) ? $json.user_id : false }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -784,
+        320
+      ],
+      "id": "2945d8e4-7176-4e3a-b356-b6528ac69ddc",
+      "name": "user_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "936ec267-4596-4d6f-820a-f66cb3f7e949",
+              "name": "chat_Username",
+              "value": "=@{{ $json.Channel_username }}",
+              "type": "string"
+            },
+            {
+              "id": "1d35e7fe-e300-4f97-9e11-da9f02d700e1",
+              "name": "chat_Title",
+              "value": "={{ $json.Channel_Title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        48
+      ],
+      "id": "75e23dae-9e34-472a-90c3-165309519f9b",
+      "name": "Chat Username"
+    },
+    {
+      "parameters": {
+        "content": "## Отправка сообщения в GSheets",
+        "height": 256,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        240
+      ],
+      "id": "5296f868-b34a-4217-9044-727bd8cfd135",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 516491278,
+          "mode": "list",
+          "cachedResultName": "RelevantMessages",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=516491278"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        848,
+        320
+      ],
+      "id": "fb1062e7-ad55-46b4-a7a1-161299e7d66f",
+      "name": "RelevantMessages",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1248,
+        160
+      ],
+      "id": "a79a232f-43d2-4661-832e-d0f25bcf6088",
+      "name": "Wait for Execution Input 1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 962513866,
+          "mode": "list",
+          "cachedResultName": "GetChannelIDs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Channel_Title",
+              "lookupValue": "={{ $json.title }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -560,
+        48
+      ],
+      "id": "1ad1e415-ad07-4db7-b05c-38eef74ae0ff",
+      "name": "Get chat username",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 45
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1680,
+        464
+      ],
+      "id": "44bc5ea4-93f4-4419-9572-2cc64b8e4d90",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        -16
+      ],
+      "id": "ea4be6c0-9999-4b3b-bfba-343ef877f474",
+      "name": "Execute me to test Workflow"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        112,
+        160
+      ],
+      "id": "a4b505fa-6c3b-4d1f-a90a-5e7bf97002ca",
+      "name": "Merge data"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        336,
+        176
+      ],
+      "id": "93131fa1-1e76-4cdd-88fa-5c8bb4301d3e",
+      "name": "Aggregate data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d79bb212-c57d-452d-8071-e23e015dcc0e",
+              "name": "Chat",
+              "value": "={{ $json.data[0].chat_Username }} {{ $json.data[0].chat_Title }}",
+              "type": "string"
+            },
+            {
+              "id": "09326d90-dcd4-4384-a907-72890742491e",
+              "name": "chat_id",
+              "value": "={{ $json.data[1].chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "8d92e51e-9798-4946-8ca5-c9ec9d186de3",
+              "name": "username",
+              "value": "={{ $json.data[2].usernames.active_usernames[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "e953c3fe-0bb8-485d-a3ab-b42a6c799f5e",
+              "name": "User_Name",
+              "value": "={{ $json.data[2].name }}",
+              "type": "string"
+            },
+            {
+              "id": "931ed774-2ece-44fd-9ee1-8109b244e5f8",
+              "name": "telegram_date",
+              "value": "={{ new Date($json.data[1].telegram_date).toLocaleString('ru-RU') }}",
+              "type": "string"
+            },
+            {
+              "id": "f810b37f-fa37-4256-bfc7-d06e4e783cbe",
+              "name": "text",
+              "value": "={{ $json.data[1].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        176
+      ],
+      "id": "d63819bd-4d93-4a93-bc51-3211ef3acc29",
+      "name": "Get exact message data"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM telegram_messages\nWHERE llm_processed is TRUE AND llm_is_relevant is TRUE AND tg_sent IS FALSE\nLIMIT 10",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1456,
+        464
+      ],
+      "id": "2422e996-d6d5-4bd2-bbd7-3bdbcfb8fbf8",
+      "name": "Сбор проанализированных сообщений для отправки",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
-    "Schedule Trigger1": {
-      "main": [
-        [
-          {
-            "node": "Execute a SQL query",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Wait1": {
       "main": [
         [
@@ -510,33 +628,11 @@
         ]
       ]
     },
-    "Execute a SQL query": {
-      "main": [
-        [
-          {
-            "node": "Цикл отправки сообщений",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Цикл отправки сообщений": {
       "main": [
         [
           {
-            "node": "No Operation, do nothing",
+            "node": "Execute me to test Workflow",
             "type": "main",
             "index": 0
           }
@@ -570,29 +666,7 @@
       "main": [
         [
           {
-            "node": "Chat Title",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Get user",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge1": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
+            "node": "Get chat username",
             "type": "main",
             "index": 0
           }
@@ -610,33 +684,11 @@
         ]
       ]
     },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Get info",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get info": {
-      "main": [
-        [
-          {
-            "node": "Send text message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Send text message": {
       "main": [
         [
           {
-            "node": "Wait1",
+            "node": "Wait for Execution Input 1",
             "type": "main",
             "index": 0
           }
@@ -676,22 +728,11 @@
         ]
       ]
     },
-    "Chat Title": {
-      "main": [
-        [
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Username": {
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "Merge data",
             "type": "main",
             "index": 2
           }
@@ -702,7 +743,7 @@
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "user_id",
             "type": "main",
             "index": 0
           },
@@ -712,9 +753,135 @@
             "index": 0
           },
           {
-            "node": "Merge1",
+            "node": "Merge data",
             "type": "main",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "If user_id exists": {
+      "main": [
+        [
+          {
+            "node": "Get user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user_id": {
+      "main": [
+        [
+          {
+            "node": "If user_id exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Username": {
+      "main": [
+        [
+          {
+            "node": "Merge data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RelevantMessages": {
+      "main": [
+        [
+          {
+            "node": "Wait for Execution Input 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait for Execution Input 1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat username": {
+      "main": [
+        [
+          {
+            "node": "Chat Username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Сбор проанализированных сообщений для отправки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate data": {
+      "main": [
+        [
+          {
+            "node": "Get exact message data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get exact message data": {
+      "main": [
+        [
+          {
+            "node": "Send text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RelevantMessages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сбор проанализированных сообщений для отправки": {
+      "main": [
+        [
+          {
+            "node": "Цикл отправки сообщений",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -725,7 +892,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "08a0ba08-cd99-4b69-bca8-352ff247e49e",
+  "versionId": "722765e3-215f-4d08-b2c5-5c677f40f17b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"

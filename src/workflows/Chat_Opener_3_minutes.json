@@ -12,10 +12,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 962513866,
+          "value": 1536316354,
           "mode": "list",
-          "cachedResultName": "GetChannelIDs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
+          "cachedResultName": "FrequentChatsOpener",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1536316354"
         },
         "options": {
           "dataLocationOnSheet": {
@@ -30,7 +30,7 @@
       "typeVersion": 4.7,
       "position": [
         64,
-        208
+        0
       ],
       "id": "e4b5a472-07ae-45c6-a2a7-c2dc6f4d378f",
       "name": "Get target chat_ids",
@@ -39,8 +39,7 @@
           "id": "c2HhsYLQ928pUJFE",
           "name": "Google Sheets account"
         }
-      },
-      "disabled": true
+      }
     },
     {
       "parameters": {
@@ -139,40 +138,18 @@
     },
     {
       "parameters": {
-        "content": "## Воркфлоу для получения обновлений из чатов\nИспользуется для чатов с большим количеством сообещний и частыми обновлениями. Список каналов передаётся через Set ноду Chat_ids.\nКаждые [3] минуты открывается и закрываются чаты из массива, что позволяет получить обновления из телеграма.\nОтключенная нода Гугл Таблиц используется для переноса в Set ноду Chat_ids конкретных чатов с большим количеством сообщений и необходимыми частыми обновлениями. При необходимости можно создать отдельный лист в Гугл Таблицах, содержащий идентификаторы таких каналов и вручную поддерживать его, а ноду Chat_ids удалить.",
-        "width": 1104
+        "content": "## Воркфлоу для получения обновлений из чатов\nИспользуется для чатов с большим количеством сообещний и ЧАСТЫМИ обновлениями. Список каналов передаётся через Google Sheets ноду `Get target chat_ids`.\nКаждые [3] минуты открывается и закрываются чаты из массива, что позволяет получить обновления из телеграма.\n\nРекомендуемая структура листа `FrequentChatsOpener`: лист с индентификаторов чатов с частыми обновления. Нода используется с параметром `Data Location` on Sheet (в моём случае и в случае использования данных из эксель файла `Palatine-selfbot-n8n` - B1:C для получения юзернеймов и индентификаторов чатов).\nСтолбцы: `Channel_URL`, `Channel_username`, `Channel_ID`, `Channel_Title`, `Insatnce_ID`",
+        "height": 320,
+        "width": 768
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -144,
-        -192
+        -368
       ],
       "id": "1379bc00-3b12-4580-b76c-8829e0c47b5b",
       "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "1b7b07f4-f5b6-47e9-8df8-5ff7b9e85f71",
-              "name": "Chat_ids",
-              "value": "={{ [-1001481574785, -1001669426155, -1002691668415, -1001495935272, -1001669426155] }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        64,
-        0
-      ],
-      "id": "197064cc-b1a4-4287-9b80-24717a36644e",
-      "name": "Chat_ids"
     },
     {
       "parameters": {
@@ -193,18 +170,41 @@
       ],
       "id": "e8b0e551-3825-4de0-a667-20354b726233",
       "name": "Every 3 minute Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -144
+      ],
+      "id": "3d78a6d0-bddc-4faf-b9d2-cd9194746225",
+      "name": "Execute me to test Workflow"
     }
   ],
   "pinData": {},
   "connections": {
     "Get target chat_ids": {
       "main": [
-        []
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Loop Over Items": {
       "main": [
-        [],
+        [
+          {
+            "node": "Execute me to test Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Open chat",
@@ -269,22 +269,11 @@
         ]
       ]
     },
-    "Chat_ids": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Every 3 minute Trigger": {
       "main": [
         [
           {
-            "node": "Chat_ids",
+            "node": "Get target chat_ids",
             "type": "main",
             "index": 0
           }
@@ -302,7 +291,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "Cuotassx3PEelIog"
   },
-  "versionId": "dadc2d2b-ec62-4f06-9772-b72113718c0b",
+  "versionId": "2522b243-06f8-4745-a44b-40bcbb5337d0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
