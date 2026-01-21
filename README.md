@@ -10,7 +10,7 @@ Telegram userbot for analyzing user messages with LLM. Supports local PostgreSQL
 Создаём отдельную директорию для проекта. В директории будет склонирована папка `n8n-output` для взаимодействия с файлами через n8n. При желании название директории можно изменить, но важно изменить это название в .yml файле (упомянуто ниже).
 Если нет опыта с Git, нажимаем `Download ZIP` и извлекаем содержимое архива в директорию проекта.
 
-![Скачивание или клонирование](<./screenshots/zip.png>)
+![Скачивание или клонирование](./screenshots/zip.png)
 
 Или используйте предпочитаемый протокол:
 
@@ -24,7 +24,7 @@ https://my.telegram.org/auth
 
 1) Проходим авторизацию, вводим код. Попадаем на следующую страницу:
 
-![Экран после авторизации](<./screenshots/tg_auth.png>)
+![Экран после авторизации](./screenshots/tg_auth.png)
 
 2) Нажимаем `API development tools`, попадаем в `Create new application`. Создаём новое приложение для получения API_ID и API_HASH
 Заполняем все поля, вводим вразумительные названия, к примеру: 
@@ -67,19 +67,23 @@ https://docs.docker.com/compose/install/
 
 Проходим регистрацию на n8n, заполняем поля:
 
-![Регистрация на n8n](<./screenshots/ n8n_reg.png>)
+![Регистрация на n8n](./screenshots/ n8n_reg.png)
 
 Создаём новый форклоу и проверяем работоспособность коммюнити-ноды Telepilot и успешность билда:
 
 1) Создаём новый workflow и импортируем файл `Session Control.json` (`./scr/workflows/`):
 
 ![](./screenshots/workflow_creation.png)
-![Импорт workflow с помощью файла](<./screenshots/import_workflow.png>)
-![](<./screenshots/import_session.png>)
+![Импорт workflow с помощью файла](./screenshots/import_workflow.png)
+![](./screenshots/import_session.png)
 
-2) В workflow находим триггер `On chat message`.![](<./screenshots/chat_trigger.png>)
+2) Заполняем credetials в ноде `Manual control` приссоединённой к ноде `When chat message receivede`
+![](./screenshots/telepilot_node.png)
+![](./screenshots/telepilot_creds.png)
 
-3) В поиске пишем `Telepilot` --> `Login with phone number using n8n chat`, приссоединяем ноду к триггеру, добавляем credentials (API_ID, API_HASH). Если видим что соединение установлено успешно, пишем в чат-триггер ноду `/start`. При правильной работоспособности вы получите в течение 3-5 секунд сообщение от Telegram с кодом двухфакторной авторизации для входа в аккаунт (В данный момент вы передаёте данные для входа в свой аккаунт стороннему сервсиу, что может повлечь потерю аккаунта, выполнять только осознавая данный риск! по собственной воле, вся ответственность за ваш аккаунт и его безопасность лежит на вас!)
+3) В workflow находим триггер `When chat message receivede`.![](./screenshots/chat_trigger.png)
+
+3) Пишем в чат-триггер ноду `/start`. При правильной работоспособности вы получите в течение 3-5 секунд сообщение от Telegram с кодом двухфакторной авторизации для входа в аккаунт (В данный момент вы передаёте данные для входа в свой аккаунт стороннему сервсиу, что может повлечь потерю аккаунта, выполнять только осознавая данный риск! по собственной воле, вся ответственность за ваш аккаунт и его безопасность лежит на вас!)
 
 Если пришёл код, то значит билд установился правильно и решена проблема с установкой зависимостей Telepilot. Если ошибка сообщает об отсутствии prebuilt libraries - билдим по новой, следим за успешностью выполнения билда.
 
@@ -94,17 +98,17 @@ https://console.cloud.google.com/projectcreate
 2) Перходим в меню APIs & services, в поиске находим `Google Drive API` и включаем. Далее находим `Google Sheets API`, включаем.
 3) Переходим в меню OAuth consent screen, жмём "Get Started". Заполняем название и свой e-mail в App Infomation. В Audience выбираем External. Снова свою почту в Contact Infomation, читаем :\) и принимаем соглашение, создаём. Дальше создаём OAuth client. Выбираем Web Application, название. Добавляем ссылку для редиректа из ноды Google Sheets в n8n в Authorized redirect URIs. **СОХРАНЯЕМ** Client ID и Client Secret.
 4) Заходим в меню Audience, вводим свой e-mail в тестовых юзеров, сохраняем.
-5) Создаём новый workflow, импортируем файл `LLM Analyze DB.json`. ![Импорт workflow с помощью файла](<./screenshots/import_workflow.png>)![Workflow LLm Analyze DB](<./screenshots/llm_analyze.png>) В ноде Google Sheets, например, в ноде "Успех" добавляем новые учётные данные с предыдущих шагов (Client ID, Client Secret), сохраняем. Если видим зеленый цвет и сообщение об успешном тесте данных, то нажимаем `Sign in with Google` и входим с помощью почты тестового юзера. После предупреждения о проверке придоэения на следующем экране проставляем все три галочки-разрешения для корректной работы ноды. Если всё было сделано правильно, то получите сообщение об успешном подключении сервиса.
+5) Создаём новый workflow, импортируем файл `LLM Analyze DB.json`. ![Импорт workflow с помощью файла](./screenshots/import_workflow.png)![Workflow LLm Analyze DB](./screenshots/llm_analyze.png) В ноде Google Sheets, например, в ноде "Успех" добавляем новые учётные данные с предыдущих шагов (Client ID, Client Secret), сохраняем. Если видим зеленый цвет и сообщение об успешном тесте данных, то нажимаем `Sign in with Google` и входим с помощью почты тестового юзера. После предупреждения о проверке придоэения на следующем экране проставляем все три галочки-разрешения для корректной работы ноды. Если всё было сделано правильно, то получите сообщение об успешном подключении сервиса.
 
-![Аутентификация в ноде GSheets](<./screenshots/sheets_auth.png>)
+![Аутентификация в ноде GSheets](./screenshots/sheets_auth.png)
 
-![Предупреждение](<./screenshots/sheets_auth2.png>)
+![Предупреждение](./screenshots/sheets_auth2.png)
 
 После данных шагов можно создать новую Гугл Таблицу и импортировать в неё предлагамую структуру листов и столбцов с помощью Excel файла `Palatine-selfbot-n8n.xlsx`.
 
-![Импорт структуры таблиц](<./screenshots/sheets.png>)
-![](<./screenshots/sheets_import.png>)
-![](<./screenshots/sheets_import2.png>)
+![Импорт структуры таблиц](./screenshots/sheets.png)
+![](./screenshots/sheets_import.png)
+![](./screenshots/sheets_import2.png)
 
 Предлагаемая структура:
 1) PasteChannelLinks - лист для вставки ссылок каналов, ID которых необходимо получить с помощью работы workflow Channel_ID Parser/ Вставляем на лист ссылки, используем workflow Channel_ID Parser и получаем результаты.
@@ -115,15 +119,15 @@ https://console.cloud.google.com/projectcreate
 
 Действия производятся в воркфлоу Upload messages to DB: создаём новый workflow и импортируем файл `Upload messages to DB.json`:
 
-![Импорт workflow с помощью файла](<./screenshots/import_workflow.png>)
+![Импорт workflow с помощью файла](./screenshots/import_workflow.png)
 
-![Импорт workflow с БД](<./screenshots/import_DB_workflow.png>)
+![Импорт workflow с БД](./screenshots/import_DB_workflow.png)
 
 После импорта workflow создаём таблицу для сохранения сообщений в базе данных:
 Находим `Сценарий для создания таблицы для сообщений в БД.` рядом с иснтрукцией, нажимаем на первую ноду PostgreSQL в сценарии.
 В соответствующей ноде вводим данные, указанные для БД в .env файле. Порт по умолчанию 5432. Пример заполнения:
 
-![Подключение к БД](<./screenshots/PG.png>)
+![Подключение к БД](./screenshots/PG.png)
 
 **3. Получаем API ключ OpenRouter**
 
@@ -136,7 +140,7 @@ https://openrouter.ai/
 
 **4. Работаем с n8n**
 
-4.1. Поочерёдно создаём новые workflow и импортируем все остальные workflow с помощью .json файлов: Channel_ID Parser, Chat_Opener_3_minutes, Chat_Opener_10_minutes, Error Сatcher, LLM UserInfo Sender
+4.1. Поочерёдно создаём новые workflow и импортируем все остальные workflow с помощью .json файлов: Channel_ID Parser, Chat_Opener_3_minutes, Chat_Opener_10_minutes, Error Сatcher, LLM UserInfo Sender. Если в новых workflow не появляются credentials, придётся заполнять руками по новой. Для указания ID админского чата можно использовать ноду Telepilot `Get Me` если используете личный аккаунт или триггер `On new message` в workflow `Upload messages to DB`
 
 Описание сценариев и необходимые инструкции описаны в каждом workflow. Краткое описание:
 1) Полезные и управляющие сценарии:
@@ -152,16 +156,16 @@ https://openrouter.ai/
 - LLM UserInfo Sender - отправка данных о пользователях в желаемый чат
 - DB Clean-up - удаление нерелевантных записей в базе данных по расписанию
 
-4.2. Для включения автоматического исполнения workflow необходимо, чтобы все тригеры в wopkflow были включены. После чего публикуем сохранённую версию workflow.
+4.2. Для включения автоматического исполнения workflow необходимо, чтобы все тригеры в workflow были включены. После чего публикуем сохранённую версию workflow.
 
-![](<./screenshots/publish.png>)
+![](./screenshots/publish.png)
 
 Все последющие изменения должны быть сохранены и опубликованы для их применения при автоматическом выполнении сценариев.
 
 В настройках workflow включаем сохранение прогресса выполнения (`Save execution progress`) и указываем запускаемый в случае ошибок workflow:
 
-![](<./screenshots/settings.png>)
-![Настройки workflow](<./screenshots/errors.png>)
+![](./screenshots/settings.png)
+![Настройки workflow](./screenshots/errors.png)
 
 Производим данную операцию для всех необходимых workflow.
 
