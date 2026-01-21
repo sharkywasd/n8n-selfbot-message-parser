@@ -1,5 +1,6 @@
 services:
   ls.telepilot.co:
+    # заглушка для телеметрии, чтобы не было ошибки с Telepilot нодой
     image: hashicorp/http-echo:latest
     command: ["-text", "{\"YARN_VERSION\": \"1.0.0\"}", "-listen=:4413"]
     ports:
@@ -22,7 +23,7 @@ services:
       retries: 10
 
   n8n:
-    build: .
+    build: ./build/
     image: docker.n8n.io/n8nio/n8n:2.2.4
     restart: always
     # command: start --tunnel создание тунеля для использования вебхуков в триггер нодах,

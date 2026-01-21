@@ -1,24 +1,17 @@
 # n8n-selftbot
 Telegram userbot for analyzing user messages with LLM. Supports local PostgreSQL DB & automatic result messages sending to Telegram chat
 
+### Порты для контейнера
+- 5678 - n8n
+- 4413 - Telepilot заглушка
+- 5432 - PostgreSQL (только внутри сети докера)
+
 ## Setup and Build
 Все дальнейшие действия, связанные с установкой файлов из данного репозитория производятся пользователем на свой страх и риск. За несоблюдение пользовательского соглашения и правил использования Telegram предусмотрены различные ограничительные меры. Ответственность за их нарушение, а также ответственность за передачу учётных данных аккаунта вы несёте самостоятельно. Все риски и их возможные последствия установки и передачи данных сторонним сервисам несёте только вы.
 
 **Повторяйте нижеследующие щаги для последовательной установки и развёртывания проекта:**
 
-**0. Клонируем репозиторий в желаемую директорию**
-Создаём отдельную директорию для проекта. В директории будет склонирована папка `n8n-output` для взаимодействия с файлами через n8n. При желании название директории можно изменить, но важно изменить это название в .yml файле (упомянуто ниже).
-Если нет опыта с Git, нажимаем `Download ZIP` и извлекаем содержимое архива в директорию проекта.
-
-![Скачивание или клонирование](./screenshots/zip.png)
-
-Или используйте предпочитаемый протокол:
-
-`git clone https://github.com/sharkywasd/n8n-selfbot-message-parser.git` (HTTPS)
-
-`git clone git@github.com:sharkywasd/n8n-selfbot-message-parser.git` (SSH, использовать, если настроен SSH-ключ)
-
-**1. Регистрируем API Development Tools**
+**0. Регистрируем API Development Tools**
 
 https://my.telegram.org/auth
 
@@ -36,6 +29,23 @@ https://my.telegram.org/auth
 
 3) Нажимаем `Create application`. На момент релиза рабочей версии (19.01.2026) Telegram до сих пор ведёт жестокий контроль за созданием данных приложений (получаем простое `ERROR` в ответ на нажатие кнопки), в  РФ осложнена регистрация новых аккаунтов. У меня получилось зарегистрировать приложение после насилия на кнопкой путём многократного нажатия кнопки и сброса ошибки с помощью клавиши `Enter` в течение 10 минут. Добро пожаловать в мир магии при регистрации приложения Telegram для получения api_id, api_hash, удачи!
 
+**1. Клонируем репозиторий в желаемую директорию**
+Создаём отдельную директорию для проекта. В директории будет склонирована папка `n8n-output` для взаимодействия с файлами через n8n. При желании название директории можно изменить, но важно изменить это название в .yml файле (упомянуто ниже).
+Если нет опыта с Git, нажимаем `Download ZIP` и извлекаем содержимое архива в директорию проекта.
+
+![Скачивание или клонирование](./screenshots/zip.png)
+
+Или используйте предпочитаемый протокол:<br>
+**HTTPS**:
+```bash
+git clone https://github.com/sharkywasd/n8n-selfbot-message-parser.git
+```
+
+**SSH** (только если настроен SSH-ключ)
+```bash
+git clone git@github.com:sharkywasd/n8n-selfbot-message-parser.git
+```
+
 **2. Билдим контейнер**
 В .yml файле описаны службы и образы, которые будут созданы и развёрнуты, в их список входят:
 - заглушка для телеметрии Telepilot, которая мешает работе ноды (потому что баг Telepilot)
@@ -46,42 +56,57 @@ https://my.telegram.org/auth
 https://docs.docker.com/compose/install/
 
 
-1) Настраиваем переменные в .env(`./src/env_expample.txt`): 
-- Переименовываем файл: `.env`
-- `API_ID` и `API_HASH`,
-- `N8N_BASE_URL` оставляем по умолчанию, если не изменяли в .yml файле и если порт по умолчанию не занят.
+1) Настраиваем переменные в .env(`./src/env_expample.txt`):
+- #### **!!!Переименовываем файл**: `env_expample.txt` в `.env`:
+```bash
+cd n8n-selfbot-message-parser/src
+mv env_example.txt .env
+```
 -  `POSTGRES_USER` -  на ваше усмотрение (по умолчанию admin) и `POSTGRES_PASSWORD` для PostgreSQL
-- Флаги `N8N_COMMUNITY_PACKAGES_ENABLED` и `N8N_COMMUNITY_PACKAGES_PREVENT_LOADING` оставляем `true` и `false` соответственно (в случае ошибок свериться со значениями данных флагов в документации n8n текущей версии: https://docs.n8n.io/hosting/configuration/environment-variables/nodes/)
-- Параметры `N8N_LOG_LEVEL` и `N8N_LOG_OUTPUT` оставляем по умолчанию `info` и `console` (при необходимости изменяем: https://docs.n8n.io/hosting/logging-monitoring/logging/)
+- Все остальные параметры оставляем по умолчанию, если не требуется обратное (например, заняты порты, изменены глобальные значения флагов в новом релизе n8n, необходим стрим лога в файл):
+    - `N8N_BASE_URL` оставляем по умолчанию, если не изменяли в .yml файле и если порт по умолчанию не занят.
+    - Флаги `N8N_COMMUNITY_PACKAGES_ENABLED` и `N8N_COMMUNITY_PACKAGES_PREVENT_LOADING` оставляем `true` и `false` соответственно (в случае ошибок свериться со значениями данных флагов в документации n8n текущей версии: https://docs.n8n.io/hosting/configuration/environment-variables/nodes/)
+    - Параметры `N8N_LOG_LEVEL` и `N8N_LOG_OUTPUT` оставляем по умолчанию `info` и `console` (при необходимости изменяем: https://docs.n8n.io/hosting/logging-monitoring/logging/)
 
 
-2) Перед запуском контейнера необходимо выполнить сборку с помощью Docker-файла (`Dockerfile`). Благодаря данному действию мы решаем проблему Telepilot № 1 (подробнее см. раздел `Особенности`) связанную с неверной установкой библиотек. Используя терминал и перейдя в директорию c докерфайлами (`./src/dockerfiles`), выполняем команду:
+2) Перед запуском контейнера необходимо выполнить сборку с помощью Docker-файла (`Dockerfile`). Благодаря данному действию мы решаем проблему Telepilot № 1 (подробнее см. раздел `Особенности`) связанную с неверной установкой библиотек. Находясь в директории `/src`, выполняем команду:
 
-`docker compose build`
+```bash
+docker compose build
+```
 
 После успешного билда можно запускать контейнер:
 
-`docker compose up -d`
+```bash
+docker compose up -d
+```
 
 Через 30-60 секунд переходим на http://localhost:5678
 
 Проходим регистрацию на n8n, заполняем поля:
 
-![Регистрация на n8n](./screenshots/ n8n_reg.png)
+![Регистрация на n8n](<./screenshots/ n8n_reg.png>)
 
 Создаём новый форклоу и проверяем работоспособность коммюнити-ноды Telepilot и успешность билда:
 
-1) Создаём новый workflow и импортируем файл `Session Control.json` (`./scr/workflows/`):
+1) Создаём новый workflow:
 
 ![](./screenshots/workflow_creation.png)
+Находим в правом вернем углу с тремя точками:
 ![Импорт workflow с помощью файла](./screenshots/import_workflow.png)
+Импортируем файл `Session Control.json` из директории `/src/workflows/`:
 ![](./screenshots/import_session.png)
 
-2) Заполняем credetials в ноде `Manual control` приссоединённой к ноде `When chat message receivede`
+2) Заполняем credetials в ноде `Manual control` приссоединённой к ноде `When chat message receivede`:
+
+Кликаем два раза
 ![](./screenshots/telepilot_node.png)
+
+Создаём новые credentials
 ![](./screenshots/telepilot_creds.png)
 
-3) В workflow находим триггер `When chat message receivede`.![](./screenshots/chat_trigger.png)
+3) В workflow находим триггер `When chat message received` и нажимаем кнопку `Open chat`
+.![](./screenshots/chat_trigger.png)
 
 3) Пишем в чат-триггер ноду `/start`. При правильной работоспособности вы получите в течение 3-5 секунд сообщение от Telegram с кодом двухфакторной авторизации для входа в аккаунт (В данный момент вы передаёте данные для входа в свой аккаунт стороннему сервсиу, что может повлечь потерю аккаунта, выполнять только осознавая данный риск! по собственной воле, вся ответственность за ваш аккаунт и его безопасность лежит на вас!)
 
@@ -102,9 +127,10 @@ https://console.cloud.google.com/projectcreate
 
 ![Аутентификация в ноде GSheets](./screenshots/sheets_auth.png)
 
+Осознаём предупреждение:
 ![Предупреждение](./screenshots/sheets_auth2.png)
 
-После данных шагов можно создать новую Гугл Таблицу и импортировать в неё предлагамую структуру листов и столбцов с помощью Excel файла `Palatine-selfbot-n8n.xlsx`.
+После данных шагов можно создать новую Гугл Таблицу на аккаунте (который был использован для регистрации в Google Cloud Console) и импортировать в неё предлагамую структуру листов и столбцов с помощью Excel файла `Palatine-selfbot-n8n.xlsx`.
 
 ![Импорт структуры таблиц](./screenshots/sheets.png)
 ![](./screenshots/sheets_import.png)
@@ -113,19 +139,27 @@ https://console.cloud.google.com/projectcreate
 Предлагаемая структура:
 1) PasteChannelLinks - лист для вставки ссылок каналов, ID которых необходимо получить с помощью работы workflow Channel_ID Parser/ Вставляем на лист ссылки, используем workflow Channel_ID Parser и получаем результаты.
 2) GetChannelIDs - лист для сохранения результатов работы Channel_ID Parser - метаданных по каналам.
-3) ModelsTests - лист для логгирования результатов работы workflow LLM Analyze DB.
+3) LLM_Parser_log - лист для логгирования результатов работы workflow LLM Analyze DB.
+4) RelevantMessages - лист для сохранения сообщений, признанных LLM релевантными.
+5) Workflow_exec_Errors - лист для сохранения ошибок во время исполнения различных workflow.
+6) SlowChatsOpener - лист с идентификаторами чатов для их чтения, "медленные" чаты с малым количеством сообщений в час.
+7) FrequentChatsOpener - лист с идентификаторами чатов для их чтения, "быстрые" чаты с большим количеством сообщений в час.
 
 **2. Создаём учётную запись PostgreSQL в n8n**
 
-Действия производятся в воркфлоу Upload messages to DB: создаём новый workflow и импортируем файл `Upload messages to DB.json`:
+Создаём новый workflow и импортируем файл `Upload messages to DB.json`:
 
 ![Импорт workflow с помощью файла](./screenshots/import_workflow.png)
 
+Импорт файла:
 ![Импорт workflow с БД](./screenshots/import_DB_workflow.png)
 
-После импорта workflow создаём таблицу для сохранения сообщений в базе данных:
-Находим `Сценарий для создания таблицы для сообщений в БД.` рядом с иснтрукцией, нажимаем на первую ноду PostgreSQL в сценарии.
-В соответствующей ноде вводим данные, указанные для БД в .env файле. Порт по умолчанию 5432. Пример заполнения:
+После импорта файла создаём таблицу для сохранения сообщений в базе данных:
+
+- Находим `Сценарий для создания таблицы для сообщений в БД.` рядом с иснтрукцией, нажимаем на первую ноду PostgreSQL в сценарии.
+![alt text](./screenshots/db-init.png)
+
+- В соответствующей ноде вводим данные, указанные для БД в .env файле. Порт по умолчанию 5432. Пример заполнения:
 
 ![Подключение к БД](./screenshots/PG.png)
 
@@ -140,7 +174,14 @@ https://openrouter.ai/
 
 **4. Работаем с n8n**
 
-4.1. Поочерёдно создаём новые workflow и импортируем все остальные workflow с помощью .json файлов: Channel_ID Parser, Chat_Opener_3_minutes, Chat_Opener_10_minutes, Error Сatcher, LLM UserInfo Sender. Если в новых workflow не появляются credentials, придётся заполнять руками по новой. Для указания ID админского чата можно использовать ноду Telepilot `Get Me` если используете личный аккаунт или триггер `On new message` в workflow `Upload messages to DB`
+4.1. Поочерёдно создаём новые workflow и импортируем все остальные workflow с помощью .json файлов.
+<br>4.1.1. Channel_ID Parser 
+<br>4.1.2. Chat_Opener_3_minutes
+<br>4.1.3 Chat_Opener_10_minutes
+<br>4.1.4 Error Сatcher
+<br>4.1.5 LLM UserInfo Sender
+
+Если в новых workflow не появляются credentials, придётся заполнять руками по новой. Для указания ID админского чата можно использовать ноду Telepilot `Get Me` если используете личный аккаунт или триггер `On new message` в workflow `Upload messages to DB`
 
 Описание сценариев и необходимые инструкции описаны в каждом workflow. Краткое описание:
 1) Полезные и управляющие сценарии:
