@@ -23,11 +23,8 @@ services:
       retries: 10
 
   n8n:
-    build: ./build/
-    image: docker.n8n.io/n8nio/n8n:2.2.4
+    image: docker.n8n.io/n8nio/n8n:2.4.6
     restart: always
-    # command: start --tunnel создание тунеля для использования вебхуков в триггер нодах,
-    # который перенаправляет запросы с серверов n8n на локалхост, небезопасно, в проде не использовать
     environment:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
@@ -41,6 +38,7 @@ services:
       - TZ=Europe/Moscow
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - N8N_COMMUNITY_PACKAGES_PREVENT_LOADING_INTERNAL=false
+      - N8N_UNVERIFIED_PACKAGES_ENABLED=true
     ports:
       - 5678:5678
     links:

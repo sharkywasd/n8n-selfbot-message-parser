@@ -1,5 +1,5 @@
 {
-  "name": "LLM UserInfo Sender",
+  "name": "[PROD]LLM UserInfo Sender",
   "nodes": [
     {
       "parameters": {
@@ -8,12 +8,12 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1744,
-        -32
+        2368,
+        -64
       ],
-      "id": "5b1e05fb-b44b-41fa-8b5e-72918ce6e825",
+      "id": "959f453f-ba51-4143-85f1-ed1f623b2f69",
       "name": "Wait1",
-      "webhookId": "942e777d-f062-41df-8bbd-48919c1630ff"
+      "webhookId": "9a9455b6-17cd-4ad6-9029-32493ae36c97"
     },
     {
       "parameters": {
@@ -25,7 +25,7 @@
         -1232,
         464
       ],
-      "id": "f81f316d-1e6c-4ad7-ba8c-cbc78932e875",
+      "id": "eb7a9dd1-4e0a-468e-ac0e-b378b0be11dd",
       "name": "Цикл отправки сообщений"
     },
     {
@@ -33,31 +33,11 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2624,
-        560
+        3248,
+        576
       ],
-      "id": "75f4188e-e5da-4934-9505-dcaad29a7e99",
+      "id": "725b5aa8-4caa-42f2-9a5c-acefa054d407",
       "name": "Успешное завершение итерации цикла"
-    },
-    {
-      "parameters": {
-        "operation": "getChat",
-        "chat_id": "={{ $json.chat_id }}"
-      },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
-      "typeVersion": 1,
-      "position": [
-        -768,
-        -160
-      ],
-      "id": "1b6a3bbe-ac19-4148-b273-e36502120072",
-      "name": "Get chat",
-      "credentials": {
-        "telePilotApi": {
-          "id": "27P0ROJOnVZRJVms",
-          "name": "Personal Telegram CoPilot account"
-        }
-      }
     },
     {
       "parameters": {
@@ -68,32 +48,33 @@
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        -320,
-        112
+        320,
+        48
       ],
-      "id": "1981fb7f-1016-4361-9a85-f7f49ad6f924",
+      "id": "08c8a687-c77b-4a75-91ff-46f06c4f1b5e",
       "name": "Get user",
       "credentials": {
         "telePilotApi": {
           "id": "27P0ROJOnVZRJVms",
           "name": "Personal Telegram CoPilot account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "resource": "message",
-        "chat_id": "=",
-        "messageText": "=Получено новое релевантное сообщение\nИсточник: {{ $json.Chat }}\nОтправитель: {{ $json.username }}\n{{ $json.User_Name }}\nДата: {{ $json.telegram_date }}\nТекст: {{ $json.text }}\nСсылка: {{ $json.messageLink }}",
+        "chat_id": "={{ $json.send_to }}",
+        "messageText": "=Новое релевантное сообщение:\nДата сообщения: {{ $json.telegram_date }}\nСсылка: {{ $json.message_link }}\nТекст сообщения: {{ $json.text }}\n\nПользователь: {{ $json.username }}\n{{ $json.user_name }}\n\nЧат: {{ $json.chat_username }}\nULR: {{ $json.chat_url }}",
         "message_thread_id": 0
       },
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        1152,
-        -176
+        2064,
+        -64
       ],
-      "id": "f357dd4c-f8e5-4c6a-971f-4293fac5c81e",
+      "id": "04d5a1c7-188f-462d-842e-a595608e579e",
       "name": "Send text message",
       "credentials": {
         "telePilotApi": {
@@ -105,17 +86,17 @@
     {
       "parameters": {
         "content": "## Подготовка информации к отправке сообщения, прошедшего успешную проверку через LLM\nПроисходит сбор пользовательского юзернейма и названия канала.\nДля фильрации от случайного попадания идентификаторов каналов используются Set `user_id` и If  `If user_id exists` нода. Обычно, идентификаторы групп и каналов начинаются с префикса \"-100...\". Это происходит для того, чтобы сообщение, отправленное от лица канала не проходило отбор.\nДля тестового выполнения цикла полностью необходимо выполнить ноду `Execute me to test Workflow`.",
-        "height": 864,
-        "width": 2016,
+        "height": 1040,
+        "width": 2896,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -1072,
-        -384
+        -560
       ],
-      "id": "5dd10690-62b9-4e07-9c67-e7ef5979d40e",
+      "id": "294f1246-43d8-4981-80d2-f8f76db1c3e0",
       "name": "Sticky Note"
     },
     {
@@ -126,10 +107,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1968,
-        464
+        2592,
+        480
       ],
-      "id": "66683986-52b3-4de9-8702-9a10f7117534",
+      "id": "b95f1135-908f-4b29-a02a-be212c1d6867",
       "name": "Wait for Execution"
     },
     {
@@ -142,10 +123,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2128,
-        352
+        2736,
+        336
       ],
-      "id": "da71a677-b9ad-429f-9b4a-3af2843d5b81",
+      "id": "e06e566b-2491-4b44-81da-8296e418af07",
       "name": "Sticky Note1"
     },
     {
@@ -159,10 +140,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2352,
-        464
+        2976,
+        480
       ],
-      "id": "b52e4e6d-e0ef-4d0d-85fd-af0e4c5e486d",
+      "id": "fce60519-81c9-49fa-b47f-fd7092ef90e9",
       "name": "Обновление БД",
       "credentials": {
         "postgres": {
@@ -173,15 +154,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst results = items.map(item => {\n  const data = item.json;\n  \n  // Проверяем обязательные поля - нужен chat_id ИЛИ user_id\n  const hasChatId = data.chat_id !== undefined && data.chat_id !== null;\n  const hasUserId = data.user_id !== undefined && data.user_id !== null;\n  \n  if (!hasChatId && !hasUserId) {\n    console.warn('Missing both chat_id and user_id:', data);\n    return {\n      json: {\n        error: 'Missing both chat_id and user_id',\n        data: data,\n        action: 'update_tg_sent_failed'\n      }\n    };\n  }\n  \n  // Определяем что использовать для WHERE условия\n  let whereCondition;\n  let params;\n  \n  if (hasChatId) {\n    // Используем chat_id если он есть\n    whereCondition = 'chat_id = $1';\n    params = [data.chat_id];\n    \n    // Если есть и message_id, добавляем его\n    if (data.message_id !== undefined && data.message_id !== null) {\n      whereCondition += ' AND message_id = $2';\n      params.push(data.message_id);\n    }\n  } else {\n    // Используем user_id как fallback\n    whereCondition = 'user_id = $1';\n    params = [data.user_id];\n    \n    // Если есть message_id, добавляем его\n    if (data.message_id !== undefined && data.message_id !== null) {\n      whereCondition += ' AND message_id = $2';\n      params.push(data.message_id);\n    }\n  }\n  \n  // SQL запрос для обновления tg_sent\n  const query = `\n    UPDATE telegram_messages \n    SET \n      tg_sent = TRUE,\n      updated_at = CURRENT_TIMESTAMP\n    WHERE \n      ${whereCondition}\n    RETURNING \n      id,\n      chat_id,\n      user_id,\n      message_id,\n      tg_sent,\n      updated_at;\n  `;\n  \n  return {\n    json: {\n      // Для PostgreSQL executeQuery\n      query: query,\n      params: params,\n      \n      // Для отладки и логирования\n      update_data: {\n        used_chat_id: hasChatId,\n        chat_id: data.chat_id,\n        user_id: data.user_id,\n        message_id: data.message_id,\n        tg_sent: true,\n        action: 'mark_as_sent',\n        where_condition: whereCondition\n      },\n      \n      // Дополнительная информация\n      _debug: {\n        original_data: data,\n        has_chat_id: hasChatId,\n        has_user_id: hasUserId,\n        has_message_id: data.message_id !== undefined && data.message_id !== null,\n        timestamp: new Date().toISOString()\n      }\n    }\n  };\n});\n\nreturn results;"
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item) => {\n  const row = item.json;\n\n  const chatId = Number(row.chat_id);\n  const messageId = Number(row.message_id);\n\n  if (!Number.isFinite(chatId) || !Number.isFinite(messageId)) {\n    return {\n      json: {\n        error: 'Missing or invalid chat_id/message_id',\n        original_data: row,\n      },\n    };\n  }\n\n  const query = `\n    UPDATE telegram_messages\n    SET\n      tg_sent = $1,\n      updated_at = CURRENT_TIMESTAMP\n    WHERE\n      chat_id = $2\n      AND message_id = $3\n    RETURNING\n      id,\n      chat_id,\n      user_id,\n      message_id,\n      tg_sent,\n      updated_at;\n  `;\n\n  return {\n    json: {\n      query,\n      params: [1, chatId, messageId],\n      action: 'mark_as_sent',\n      update_data: {\n        chat_id: chatId,\n        message_id: messageId,\n        tg_sent: 1,\n      },\n    },\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2176,
-        464
+        2800,
+        480
       ],
-      "id": "922fdfa9-1940-41b6-974b-723154b0d321",
+      "id": "ee702177-a254-4b73-8c27-714d8407b178",
       "name": "Подготовка SQL-запроса"
     },
     {
@@ -193,10 +174,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1024,
-        -288
+        1904,
+        -160
       ],
-      "id": "d2b24e0e-ea87-4176-aa9f-136c47cdef2c",
+      "id": "012eb8f4-d187-46f1-ae7e-1056234c477f",
       "name": "Sticky Note2"
     },
     {
@@ -205,13 +186,13 @@
           "assignments": [
             {
               "id": "317ce36e-eb21-444f-b02c-56f93568af97",
-              "name": "usernames.active_usernames[0]",
-              "value": "=@{{ $json.usernames.active_usernames[0] }}",
+              "name": "username",
+              "value": "={{ $json.usernames?.active_usernames?.[0] ? \"@\" + $json.usernames.active_usernames[0] : $json.message }}",
               "type": "string"
             },
             {
               "id": "157427fd-d441-40fb-82a5-d87255b66b84",
-              "name": "name",
+              "name": "user_name",
               "value": "={{ ($json.first_name + ' ' + $json.last_name).trim() }}",
               "type": "string"
             }
@@ -222,10 +203,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -96,
-        112
+        560,
+        48
       ],
-      "id": "e4f272f9-a4e1-486e-b0ae-65eda806fa59",
+      "id": "0f05ff0a-f44f-4a70-a98d-d87c6b13c6f4",
       "name": "Username"
     },
     {
@@ -245,16 +226,16 @@
               "type": "number"
             },
             {
-              "id": "7ad53468-b7fb-4f2d-b217-20cd2af82022",
-              "name": "text",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            },
-            {
               "id": "c9af7258-3fa7-4a07-8ca5-fcff07ea059e",
               "name": "message_id",
               "value": "={{ $json.message_id }}",
               "type": "number"
+            },
+            {
+              "id": "7ad53468-b7fb-4f2d-b217-20cd2af82022",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
             },
             {
               "id": "0bf46d23-f382-4924-abda-d58fc25f68bb",
@@ -269,10 +250,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -992,
-        -32
+        -976,
+        -96
       ],
-      "id": "0100de0d-aa38-43c1-8b61-0c4c72aafd78",
+      "id": "3d3b7fd2-9797-43c7-b145-c4d5f8a19299",
       "name": "message_metadata"
     },
     {
@@ -287,7 +268,7 @@
         -1792,
         -112
       ],
-      "id": "25f78d32-bf2f-44f2-8373-e13aa55851e4",
+      "id": "477092e1-f7f7-45ca-9221-d9ec59689d3e",
       "name": "Sticky Note3"
     },
     {
@@ -318,10 +299,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -544,
-        112
+        -320,
+        48
       ],
-      "id": "1d09181c-645b-4632-b897-50708a758cd4",
+      "id": "61c178a3-4642-4f55-80db-73879ad7b2ab",
       "name": "If user_id exists"
     },
     {
@@ -342,10 +323,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -768,
-        112
+        -752,
+        48
       ],
-      "id": "2945d8e4-7176-4e3a-b356-b6528ac69ddc",
+      "id": "9e632e28-de38-4894-9d07-795cd2c7ee3a",
       "name": "user_id"
     },
     {
@@ -353,16 +334,22 @@
         "assignments": {
           "assignments": [
             {
-              "id": "936ec267-4596-4d6f-820a-f66cb3f7e949",
-              "name": "chat_Username",
-              "value": "=@{{ $json.Channel_username }}",
+              "id": "30c50e9e-3325-484e-bbc3-384b86a660d2",
+              "name": "chat_username",
+              "value": "={{ $json.chat_username }}",
               "type": "string"
             },
             {
-              "id": "1d35e7fe-e300-4f97-9e11-da9f02d700e1",
-              "name": "chat_Title",
-              "value": "={{ $json.Channel_Title }}",
+              "id": "86f0dcda-7547-4db7-81a1-9b4eac54658d",
+              "name": "chat_url",
+              "value": "={{\"https://t.me/\" + $json.chat_username.substring(1,) }}",
               "type": "string"
+            },
+            {
+              "id": "aa58cde1-6a47-4b24-b8f3-2e2bf778ee72",
+              "name": "send_to",
+              "value": "={{ $json.send_to }}",
+              "type": "number"
             }
           ]
         },
@@ -371,122 +358,11 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -320,
-        -160
+        560,
+        -208
       ],
-      "id": "75e23dae-9e34-472a-90c3-165309519f9b",
+      "id": "91537bb9-d325-495e-95c9-9c912ed44e16",
       "name": "Chat Username"
-    },
-    {
-      "parameters": {
-        "content": "## Отправка сообщения в GSheets",
-        "height": 256,
-        "width": 416
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1024,
-        48
-      ],
-      "id": "5296f868-b34a-4217-9044-727bd8cfd135",
-      "name": "Sticky Note4"
-    },
-    {
-      "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
-          "__rl": true,
-          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
-          "mode": "list",
-          "cachedResultName": "Palatine-selfbot-n8n",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 516491278,
-          "mode": "list",
-          "cachedResultName": "RelevantMessages",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=516491278"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        1152,
-        128
-      ],
-      "id": "fb1062e7-ad55-46b4-a7a1-161299e7d66f",
-      "name": "RelevantMessages",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "c2HhsYLQ928pUJFE",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "chooseBranch"
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1552,
-        -32
-      ],
-      "id": "a79a232f-43d2-4661-832e-d0f25bcf6088",
-      "name": "Wait for Execution Input 1"
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
-          "mode": "list",
-          "cachedResultName": "Palatine-selfbot-n8n",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 962513866,
-          "mode": "list",
-          "cachedResultName": "GetChannelIDs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=962513866"
-        },
-        "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "Channel_Title",
-              "lookupValue": "={{ $json.title }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        -544,
-        -160
-      ],
-      "id": "1ad1e415-ad07-4db7-b05c-38eef74ae0ff",
-      "name": "Get chat username",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "c2HhsYLQ928pUJFE",
-          "name": "Google Sheets account"
-        }
-      }
     },
     {
       "parameters": {
@@ -505,7 +381,7 @@
         -1680,
         464
       ],
-      "id": "44bc5ea4-93f4-4419-9572-2cc64b8e4d90",
+      "id": "b3340370-33b4-4850-be00-bbe58459d4ab",
       "name": "Schedule Trigger"
     },
     {
@@ -513,10 +389,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -992,
-        -224
+        -960,
+        -416
       ],
-      "id": "ea4be6c0-9999-4b3b-bfba-343ef877f474",
+      "id": "13abda39-4cbf-4dd7-a8a6-799aa4ebae1b",
       "name": "Execute me to test Workflow"
     },
     {
@@ -526,10 +402,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        128,
-        -48
+        1056,
+        -96
       ],
-      "id": "a4b505fa-6c3b-4d1f-a90a-5e7bf97002ca",
+      "id": "e52db570-2908-4e9e-9155-006155ce1b65",
       "name": "Merge data"
     },
     {
@@ -540,75 +416,16 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        352,
-        -16
+        1280,
+        -64
       ],
-      "id": "93131fa1-1e76-4cdd-88fa-5c8bb4301d3e",
+      "id": "f571c6c9-b81f-4326-a228-ccabfb36dacb",
       "name": "Aggregate data"
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "d79bb212-c57d-452d-8071-e23e015dcc0e",
-              "name": "Chat",
-              "value": "={{ $json.data[0].chat_Username }} {{ $json.data[0].chat_Title }}",
-              "type": "string"
-            },
-            {
-              "id": "09326d90-dcd4-4384-a907-72890742491e",
-              "name": "chat_id",
-              "value": "={{ $json.data[1].chat_id }}",
-              "type": "number"
-            },
-            {
-              "id": "8d92e51e-9798-4946-8ca5-c9ec9d186de3",
-              "name": "username",
-              "value": "={{ $json.data[2].usernames.active_usernames[0] }}",
-              "type": "string"
-            },
-            {
-              "id": "e953c3fe-0bb8-485d-a3ab-b42a6c799f5e",
-              "name": "User_Name",
-              "value": "={{ $json.data[2].name }}",
-              "type": "string"
-            },
-            {
-              "id": "931ed774-2ece-44fd-9ee1-8109b244e5f8",
-              "name": "telegram_date",
-              "value": "={{ new Date($json.data[1].telegram_date).toLocaleString('ru-RU') }}",
-              "type": "string"
-            },
-            {
-              "id": "f810b37f-fa37-4256-bfc7-d06e4e783cbe",
-              "name": "text",
-              "value": "={{ $json.data[1].text }}",
-              "type": "string"
-            },
-            {
-              "id": "5a9ae23b-8710-427b-a13d-1ba3def9f5cd",
-              "name": "messageLink",
-              "value": "={{ $json.data[3].link }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        576,
-        -16
-      ],
-      "id": "d63819bd-4d93-4a93-bc51-3211ef3acc29",
-      "name": "Get exact message data"
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT *\nFROM telegram_messages\nWHERE llm_processed is TRUE AND llm_is_relevant is TRUE AND tg_sent IS FALSE\nLIMIT 10",
+        "query": "SELECT *\nFROM telegram_messages\nWHERE tg_sent = 0\n  AND \n  regexp_relevant = 1\n  OR llm_relevant = 1\nLIMIT 10",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -617,7 +434,7 @@
         -1456,
         464
       ],
-      "id": "2422e996-d6d5-4bd2-bbd7-3bdbcfb8fbf8",
+      "id": "c48bd088-e16f-4b46-b9dd-d816130cb5ae",
       "name": "Сбор проанализированных сообщений для отправки",
       "credentials": {
         "postgres": {
@@ -636,10 +453,10 @@
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        -96,
-        304
+        560,
+        240
       ],
-      "id": "2fa2ea71-3ca3-4d8f-b7d9-a70b8660317a",
+      "id": "f7874bde-e830-4ed8-abea-56b7b40ecf35",
       "name": "Get direct link to a specific message in a group or supergroup",
       "credentials": {
         "telePilotApi": {
@@ -658,10 +475,10 @@
       "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        -544,
-        304
+        -320,
+        240
       ],
-      "id": "c6b42036-ca07-499d-95fb-92b594dc2a00",
+      "id": "bffc526b-d0d2-4234-b7e8-933cfeae29b5",
       "name": "Get chat history",
       "credentials": {
         "telePilotApi": {
@@ -678,12 +495,12 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -96,
-        -160
+        816,
+        -208
       ],
-      "id": "b51db0b7-596b-49de-94dc-ab0bd7bcfabd",
+      "id": "166c5d4c-8e07-466d-a2ea-d4208bded187",
       "name": "Wait",
-      "webhookId": "f904af42-ddae-4e85-b6f2-e03f1e01ecb1"
+      "webhookId": "43d9374c-05a9-488f-9b69-c7f77b5efc73"
     },
     {
       "parameters": {
@@ -692,12 +509,12 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -768,
-        304
+        -752,
+        240
       ],
-      "id": "8835af0b-09e3-482d-9d03-400c21c8c27b",
+      "id": "8a91a59a-9ab4-4eb5-9103-0db39c7e5f18",
       "name": "Wait2",
-      "webhookId": "f904af42-ddae-4e85-b6f2-e03f1e01ecb1"
+      "webhookId": "6e886e9f-8523-4af0-a3d8-a3b8968f40f9"
     },
     {
       "parameters": {
@@ -705,27 +522,272 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
+      "position": [
+        320,
+        240
+      ],
+      "id": "7d959e84-cd03-4930-a84e-a0e05d7cfab3",
+      "name": "Wait3",
+      "webhookId": "8d39198d-9501-45fe-9216-3142d365478f"
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 2 + 1) }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        -64
+      ],
+      "id": "8bb3e9ab-ba91-42a8-b122-fbc4f0441291",
+      "name": "Wait4",
+      "webhookId": "34021f59-dbc1-4a52-ac6f-7c29f59626fc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ecdb669e-ec59-429c-8752-b48bb8353290",
+              "name": "send_to",
+              "value": "={{ $json.data[0].send_to }}",
+              "type": "number"
+            },
+            {
+              "id": "09326d90-dcd4-4384-a907-72890742491e",
+              "name": "chat_username",
+              "value": "={{ $json.data[0].chat_username }}",
+              "type": "string"
+            },
+            {
+              "id": "47fd2286-2aec-4d3a-b482-3e005b0d0a6f",
+              "name": "chat_id",
+              "value": "={{ $json.data[1].chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "5d5da9d0-89f0-4c90-9a9f-67adf156cfe5",
+              "name": "chat_url",
+              "value": "={{ $json.data[0].chat_url }}",
+              "type": "string"
+            },
+            {
+              "id": "4f845074-d5ef-4747-94bb-6bb23d1b3277",
+              "name": "user_id",
+              "value": "={{ $json.data[1].user_id }}",
+              "type": "number"
+            },
+            {
+              "id": "8d92e51e-9798-4946-8ca5-c9ec9d186de3",
+              "name": "username",
+              "value": "={{ $json.data[2].username }}",
+              "type": "string"
+            },
+            {
+              "id": "e953c3fe-0bb8-485d-a3ab-b42a6c799f5e",
+              "name": "user_name",
+              "value": "={{ $json.data[2].user_name }}",
+              "type": "string"
+            },
+            {
+              "id": "931ed774-2ece-44fd-9ee1-8109b244e5f8",
+              "name": "telegram_date",
+              "value": "={{ new Date($json.data[1].telegram_date).toLocaleString('ru-RU') }}",
+              "type": "string"
+            },
+            {
+              "id": "4311e7cf-c306-48fe-b9c3-f349a3e5a5af",
+              "name": "message_id",
+              "value": "={{ $json.data[1].message_id }}",
+              "type": "number"
+            },
+            {
+              "id": "f810b37f-fa37-4256-bfc7-d06e4e783cbe",
+              "name": "text",
+              "value": "={{ $json.data[1].text }}",
+              "type": "string"
+            },
+            {
+              "id": "5a9ae23b-8710-427b-a13d-1ba3def9f5cd",
+              "name": "message_link",
+              "value": "={{ $json.data[3].link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        -64
+      ],
+      "id": "5ad38d36-0bb4-455c-bd7a-5872e4a48698",
+      "name": "Get message metadata"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:K3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -736,
+        -352
+      ],
+      "id": "79d9c76d-d7b5-4e36-a31f-d5f3a5356831",
+      "name": "Get chat_id",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86edad06-7698-4a1f-8089-1ddbf4b53037",
+              "name": "chat_usernames_regexp",
+              "value": "={{ $input.first().json.values()[9] }}",
+              "type": "string"
+            },
+            {
+              "id": "b5221647-4bc2-4596-8078-6fe02fdcea71",
+              "name": "chat_id_regexp",
+              "value": "={{ $input.first().json.values()[10] }}",
+              "type": "array"
+            },
+            {
+              "id": "a837226e-9e36-4f91-bca1-9a5227a27b8e",
+              "name": "chat_usernames_llm",
+              "value": "={{ $input.last().json.values()[9] }}",
+              "type": "string"
+            },
+            {
+              "id": "5c239677-5510-4597-ae90-10db40b2fb82",
+              "name": "chat_id_llm",
+              "value": "={{ $input.last().json.values()[10] }}",
+              "type": "array"
+            },
+            {
+              "id": "ca8a4a25-7048-4fc2-80f5-dfc32192b916",
+              "name": "=send_to",
+              "value": "={{ $input.first().json.values()[11] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -528,
+        -352
+      ],
+      "id": "bd4c25ce-e9fb-4e5c-9892-2a1a1235ee80",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfunction normalizeIdArray(arr) {\n  if (!Array.isArray(arr)) return [];\n\n  return arr\n    .map(v => Number(v))\n    .filter(v => Number.isFinite(v));\n}\n\nfunction normalizeUsernameArray(value) {\n  const raw = String(value ?? '');\n\n  return raw\n    .split(/\\r?\\n/)\n    .map(s => s.trim())\n    .filter(Boolean)\n    .map(s => (s.startsWith('@') ? s : `@${s}`));\n}\n\nfunction arraysEqualAsSets(a, b) {\n  const aa = [...new Set(a)].sort((x, y) => x - y);\n  const bb = [...new Set(b)].sort((x, y) => x - y);\n\n  if (aa.length !== bb.length) return false;\n\n  for (let i = 0; i < aa.length; i++) {\n    if (aa[i] !== bb[i]) return false;\n  }\n\n  return true;\n}\n\nfunction buildPairs(ids, usernames, sendTo, source = null) {\n  const len = Math.min(ids.length, usernames.length);\n  const pairs = [];\n\n  for (let i = 0; i < len; i++) {\n    const pair = {\n      send_to: sendTo,\n      chat_id: ids[i],\n      chat_username: usernames[i],\n    };\n\n    if (source) {\n      pair.source = source;\n    }\n\n    pairs.push(pair);\n  }\n\n  return pairs;\n}\n\nconst result = [];\n\nfor (const item of items) {\n  const row = item.json;\n\n  const regexpIds = normalizeIdArray(row.chat_id_regexp);\n  const regexpUsernames = normalizeUsernameArray(row.chat_usernames_regexp);\n\n  const llmIds = normalizeIdArray(row.chat_id_llm);\n  const llmUsernames = normalizeUsernameArray(row.chat_usernames_llm);\n\n  const sendTo = row.send_to ?? null;\n\n  const idsAreEqual = arraysEqualAsSets(regexpIds, llmIds);\n\n  if (idsAreEqual) {\n    const pairs = buildPairs(regexpIds, regexpUsernames, sendTo);\n\n    for (const pair of pairs) {\n      result.push({ json: pair });\n    }\n  } else {\n    const regexpPairs = buildPairs(regexpIds, regexpUsernames, sendTo, 'regexp');\n    const llmPairs = buildPairs(llmIds, llmUsernames, sendTo, 'llm');\n\n    for (const pair of [...regexpPairs, ...llmPairs]) {\n      result.push({ json: pair });\n    }\n  }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         -320,
-        304
+        -352
       ],
-      "id": "55a797e4-a73b-44a0-86c7-4bf649e85a31",
-      "name": "Wait3",
-      "webhookId": "f904af42-ddae-4e85-b6f2-e03f1e01ecb1"
+      "id": "eae0baa8-5171-4b13-aadd-51f8fedc74f4",
+      "name": "Compare arrays",
+      "executeOnce": true
     },
     {
       "parameters": {
-        "amount": "={{ Math.floor(Math.random() * 2 + 1) }}"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "220b3f85-2ac3-471e-a59c-4543b0503293",
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
       },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        768,
-        -16
+        -736,
+        -192
       ],
-      "id": "c8dca05b-6734-460f-b35c-31b7a85592df",
-      "name": "Wait4",
-      "webhookId": "f904af42-ddae-4e85-b6f2-e03f1e01ecb1"
+      "id": "6a871307-defa-497a-b6db-45cc805a6937",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -352
+      ],
+      "id": "f12883c7-96c9-4b8a-9edc-4bd942ec354a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        96,
+        -208
+      ],
+      "id": "307858bd-59fd-4453-ad29-552dc3c47c87",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length < 2) {\n  throw new Error('Ожидается 2 item: первый с chat_id, второй с data');\n}\n\nconst currentChatId = Number(items[0]?.json?.chat_id);\n\nif (!Number.isFinite(currentChatId)) {\n  throw new Error('В первом item отсутствует корректный chat_id');\n}\n\nconst data = items[1]?.json?.data;\n\nif (!Array.isArray(data)) {\n  throw new Error('Во втором item должен быть массив data');\n}\n\nconst matched = data.find(row => Number(row.chat_id) === currentChatId);\n\nif (!matched) {\n  return [\n    {\n      json: {\n        chat_id: currentChatId,\n        found: 0,\n      },\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      ...matched,\n      found: 1,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -208
+      ],
+      "id": "6e3a15f7-9fe8-492b-88a9-1a2b4ca1d422",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
@@ -775,17 +837,6 @@
         ]
       ]
     },
-    "Get chat": {
-      "main": [
-        [
-          {
-            "node": "Get chat username",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Get user": {
       "main": [
         [
@@ -801,7 +852,7 @@
       "main": [
         [
           {
-            "node": "Wait for Execution Input 1",
+            "node": "Wait1",
             "type": "main",
             "index": 0
           }
@@ -861,17 +912,22 @@
             "index": 0
           },
           {
-            "node": "Get chat",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Merge data",
             "type": "main",
             "index": 1
           },
           {
             "node": "Wait2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get chat_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
             "type": "main",
             "index": 0
           }
@@ -911,39 +967,6 @@
         ]
       ]
     },
-    "RelevantMessages": {
-      "main": [
-        [
-          {
-            "node": "Wait for Execution Input 1",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Wait for Execution Input 1": {
-      "main": [
-        [
-          {
-            "node": "Wait1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get chat username": {
-      "main": [
-        [
-          {
-            "node": "Chat Username",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Schedule Trigger": {
       "main": [
         [
@@ -970,18 +993,7 @@
       "main": [
         [
           {
-            "node": "Get exact message data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get exact message data": {
-      "main": [
-        [
-          {
-            "node": "Wait4",
+            "node": "Get message metadata",
             "type": "main",
             "index": 0
           }
@@ -1061,9 +1073,92 @@
             "node": "Send text message",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Get message metadata": {
+      "main": [
+        [
           {
-            "node": "RelevantMessages",
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_id": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Compare arrays",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare arrays": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Chat Username",
             "type": "main",
             "index": 0
           }
@@ -1076,11 +1171,18 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "11a69e87-dfd7-4e0f-80ca-fa61661802fb",
+  "versionId": "a7c49d63-c0a0-4a3e-a9b8-67f8b254277a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
   },
-  "id": "t8KqErRsgVLAtHnl",
-  "tags": []
+  "id": "j32tqGMsjm4N1zwk",
+  "tags": [
+    {
+      "updatedAt": "2026-03-05T10:53:53.866Z",
+      "createdAt": "2025-12-31T15:15:42.132Z",
+      "id": "QIq09oe3LXjbB3MA",
+      "name": "MessageAnalyzer"
+    }
+  ]
 }

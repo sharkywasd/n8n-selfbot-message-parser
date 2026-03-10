@@ -2,7 +2,16 @@
   "name": "DB Clean-up",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
@@ -14,7 +23,7 @@
     },
     {
       "parameters": {
-        "content": "## Воркфлоу для удаления лишних записей из БД.\nВыполнение производится в соответствие с настройкой триггера. Удаляются записи, обработанные LLM и признанные не релевантными в контексте транскрибации.",
+        "content": "## Воркфлоу для удаления лишних записей из БД.\nВыполнение производится в соответствие с настройкой триггера. Удаляются записи, обработанные REGEXP и LLM и признанные не релевантными в контексте Search'a.",
         "height": 336,
         "width": 656,
         "color": 3
@@ -31,7 +40,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "BEGIN;\n\n-- Посмотреть что будет удалено\nSELECT * \nFROM telegram_messages\nWHERE llm_processed IS TRUE\n  AND llm_is_relevant IS FALSE;\n\n-- Удалить (если все ок)\nDELETE FROM telegram_messages\nWHERE llm_processed IS TRUE\n  AND llm_is_relevant IS FALSE;\n\n-- Проверить результат\nSELECT COUNT(*) \nFROM telegram_messages\nWHERE llm_processed IS TRUE \n  AND llm_is_relevant IS FALSE;\n\n-- Если все правильно - закоммитить\nCOMMIT;\n\n-- Или откатить если что-то не так\nROLLBACK;",
+        "query": "BEGIN;\n\nDELETE FROM telegram_messages\nWHERE regexp_processed = 1\n  AND regexp_relevant = 0\n  AND llm_processed = 1\n  AND llm_relevant = 0\nRETURNING *;\n\n-- Если всё ок:\nCOMMIT;\n\n-- Если нет, комменим COMMIT и раскомменчиваем:\n-- ROLLBACK;",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -69,7 +78,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "40a808b4-ea3e-445e-b128-63e692a280cc",
+  "versionId": "9ef94f14-75f9-4f66-8ff1-5a218c4d992b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"

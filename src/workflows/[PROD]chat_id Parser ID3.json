@@ -1,0 +1,517 @@
+{
+  "name": "[PROD]chat_id Parser ID3",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "searchPublicChat",
+        "username": "={{ $json.values()[1] }}"
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        144
+      ],
+      "id": "ac2472b3-9d7b-4de3-8af2-fa1ce2374365",
+      "name": "Search public chat by username",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.random() * 5 + 5 }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        192
+      ],
+      "id": "aba42472-7652-49ff-8f61-394bd9d78397",
+      "name": "Wait2",
+      "webhookId": "67ae3d5c-0f7a-453a-9172-9bcb55e5f1a9",
+      "notes": "Умеренное использование Telegram API во избежание санкций для аккаунта"
+    },
+    {
+      "parameters": {
+        "content": "## Воркфлоу для обработки ссылок чатов\nСохраняет информацию по каналу в гугл таблицы.\n\nНеобходимы credential из Google Cloud Console и настройка листов\n\nПредлагаемая структура листов:\n1. `PasteChannelLinks` - лист для вставки ссылок каналов. Столбцы: `URLs`.\n2. `GetChannelIDs` - лист для сохранения метаданных по каналам. Этот же лист может использоваться в воркфлоу для поиска по ключам. Столбцы (опционально): `Channel_URL`, `Channel_username`, `Channel_ID`, `Channel_Title`.\n\nНабор данных о чате настраивается в ноде `Данные о чате`.\nИнформация о чате обновляется или добавляется, если такой записи не было.\nТриггер стоит на изменения на листе `PasteChannelLinks`.\n\nДля тестового выполнения циклы использовать ноду `Execute me to test Workflow`\n\nПериодичность проверки обновления данных(новых ссылок для обработки) на листе `PasteChannelLinks` настраивается в ноде Гугл Таблиц `Paste channel links to parse` с помощью параметра `Poll time`.\n",
+        "height": 432,
+        "width": 768,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -144
+      ],
+      "id": "a39116d7-b890-4850-a5c5-0087f7d5df1c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst result = [];\n\nfor (const item of items) {\n  const row = item.json;\n  const id = row.ID ?? null;\n  const raw = String(row[\"tg каналы в которых искать\"] ?? \"\");\n\n  // Уникальные username только в рамках текущей строки\n  const usernames = [...new Set(\n    raw\n      .split(/\\r?\\n/)\n      .map(s => s.trim())\n      .filter(Boolean)\n      .map(s => s.replace(/^@+/, \"\")) // убрать ведущие @\n      .map(s => s.trim())\n      .filter(Boolean)\n  )];\n\n  for (const chat_username of usernames) {\n    result.push({\n      json: {\n        ID: id,\n        chat_username,\n      }\n    });\n  }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "2fb37232-c2f9-45ab-93c4-6ef0a285bbf4",
+      "name": "trim_url",
+      "notes": "Обрезка URL для получения username"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1542279637,
+          "mode": "list",
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+        },
+        "event": "rowUpdate",
+        "options": {
+          "columnsToWatch": [
+            "tg каналы в которых искать"
+          ],
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:I3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "132e07bf-4e2b-4a3c-b751-8aaac607ab2b",
+      "name": "Paste channel links to parse",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "4m4boBmcNiGrrXCH",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13144a7c-ab0e-41a1-891b-581ca3b1f192",
+              "name": "ID",
+              "value": "={{ $json.data[0].ID }}",
+              "type": "number"
+            },
+            {
+              "id": "336f9c66-4e93-46b7-924f-d5f0903d57c8",
+              "name": "chat_username",
+              "value": "={{ $json.data[0].chat_username }}",
+              "type": "string"
+            },
+            {
+              "id": "b453f364-7dbd-48de-97a7-a5cbe9b17b71",
+              "name": "chat_id",
+              "value": "={{ $json.data[1].id }}",
+              "type": "number"
+            },
+            {
+              "id": "31def429-1f81-4492-8e96-39057793dd6e",
+              "name": "title",
+              "value": "={{ $json.data[1].title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2064,
+        0
+      ],
+      "id": "66a5aa40-48d1-4ffe-9fca-883c7c10813c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "6db45396-39ce-4b82-bc45-c6c170c03f37",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "466f3f1d-eeda-4a8c-850d-d49cb6100f12",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -224
+      ],
+      "id": "3c115e2e-78e6-4c0b-b7bb-19b7032a9c8d",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items.length || !Array.isArray(items[0].json.data)) {\n  throw new Error('Ожидается один item с массивом в поле data');\n}\n\nconst data = items[0].json.data;\n\n// Группируем по ID\nconst grouped = new Map();\n\nfor (const row of data) {\n  const id = row.ID ?? null;\n  if (id === null) continue;\n\n  if (!grouped.has(id)) {\n    grouped.set(id, {\n      ID: id,\n      chat_ids: [],\n      chat_usernames: [],\n    });\n  }\n\n  const group = grouped.get(id);\n\n  if (row.chat_id !== undefined && row.chat_id !== null) {\n    group.chat_ids.push(row.chat_id);\n  }\n\n  if (\n    row.chat_username !== undefined &&\n    row.chat_username !== null &&\n    String(row.chat_username).trim() !== ''\n  ) {\n    const username = String(row.chat_username).trim();\n    group.chat_usernames.push(username.startsWith('@') ? username : `@${username}`);\n  }\n}\n\n// Формируем выход\nconst result = [];\n\nfor (const group of grouped.values()) {\n  const uniqueChatIds = [...new Set(group.chat_ids)];\n  const uniqueChatUsernames = [...new Set(group.chat_usernames)];\n\n  result.push({\n    json: {\n      ID: group.ID,\n      chat_ids: uniqueChatIds,\n      chat_usernames_multiline: uniqueChatUsernames.join('\\n'),\n    },\n  });\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -224
+      ],
+      "id": "989e5204-fe7b-448c-9e67-4f212d1f2eef",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -224
+      ],
+      "id": "19252d3a-2789-4ad3-a601-0c653ec437da",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "6243718a-e541-4ae3-977a-d502d613b4b5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1542279637,
+          "mode": "list",
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tg каналы в которых искать": "={{ $json.chat_usernames_multiline }}",
+            "tg каналы chat_id": "={{ $json.chat_ids }}",
+            "ID": "={{ $json.ID }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CV (ID 3)",
+              "displayName": "CV (ID 3)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tg каналы в которых искать",
+              "displayName": "tg каналы в которых искать",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tg каналы chat_id",
+              "displayName": "tg каналы chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "куда отправляем релевантные сообщения",
+              "displayName": "куда отправляем релевантные сообщения",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Техническая инфа\n(заполняется автоматически, руками не трогать)",
+              "displayName": "Техническая инфа\n(заполняется автоматически, руками не трогать)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        -224
+      ],
+      "id": "3a910199-bcb8-4329-a2bb-f7795c63699d",
+      "name": "Update chat_ids",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Search public chat by username": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trim_url": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paste channel links to parse": {
+      "main": [
+        [
+          {
+            "node": "trim_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search public chat by username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update chat_ids": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "45863684-0bb5-4a88-abe8-21545a5370cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "RWSfe8Hn0Kv4vvtE",
+  "tags": [
+    {
+      "updatedAt": "2026-03-09T01:06:05.829Z",
+      "createdAt": "2026-03-09T01:06:05.829Z",
+      "id": "TefpxPmVXL8tp7TE",
+      "name": "Search ID3"
+    }
+  ]
+}

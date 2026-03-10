@@ -1,0 +1,1063 @@
+{
+  "name": "[PROD]Regexp1",
+  "nodes": [
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        944,
+        -1728
+      ],
+      "id": "55b55929-98de-46ff-9442-00ea782c9b2b",
+      "name": "Цикл на каналы1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node — RegExp classifier for text_positive/text_negative\nconst allItems = $input.all();\nif (!allItems.length) throw new Error('Нет входных элементов');\n\n// 1) Берём строку с regexp-объектом (во входе: \"regexp\")\nconst first = allItems[0].json;\nlet regexText = first.regexp ?? first.RegExp;\n\nif (!regexText) {\n  throw new Error('Первый элемент должен содержать поле regexp (строка с объектом регулярных выражений)');\n}\n\nregexText = String(regexText).trim();\n\n// Иногда приходит как строка с кавычками вокруг: \"{ ... };\"\nif (\n  (regexText.startsWith('\"') && regexText.endsWith('\"')) ||\n  (regexText.startsWith(\"'\") && regexText.endsWith(\"'\"))\n) {\n  regexText = regexText.slice(1, -1);\n}\n\n// Убираем хвост \";\"\nregexText = regexText.replace(/;\\s*$/, '').trim();\n\n// Убираем обёртку вида: const X = ...;\nregexText = regexText.replace(/^\\s*(const|let|var)\\s+\\w+\\s*=\\s*/i, '').trim();\n\n// Теперь ожидаем: { key: /.../gi, ... }\nregexText = regexText.replace(/^\\s*\\{/, '').replace(/\\}\\s*$/, '').trim();\n\n// 2) Парсим пары key: /pattern/flags\nconst regexMap = {};\nconst pairRe = /(\\w+)\\s*:\\s*\\/([\\s\\S]*?)\\/([gimyus]*)/g;\n\nlet m;\nwhile ((m = pairRe.exec(regexText)) !== null) {\n  const key = m[1];\n  const pattern = m[2];\n  const flags = m[3] || '';\n  try {\n    regexMap[key] = new RegExp(pattern, flags);\n  } catch (e) {\n    throw new Error(`Ошибка в RegExp для \"${key}\": ${e.message}`);\n  }\n}\n\nif (!Object.keys(regexMap).length) {\n  throw new Error('Не удалось распарсить regexp-объект: нет ни одной пары key:/.../flags');\n}\n\n// 3) Хелпер классификации для одного текста\nfunction classifyText(textRaw) {\n  const text = String(textRaw ?? '').trim();\n  const lowerText = text.toLowerCase();\n\n  const matchedCategories = [];\n  const matchedSnippets = {};\n\n  for (const [key, re] of Object.entries(regexMap)) {\n    // чтобы избежать проблем с lastIndex у /g — используем новый RegExp на каждый прогон\n    const localRe = new RegExp(re.source, re.flags);\n    const hits = lowerText.match(localRe);\n    if (hits && hits.length) {\n      matchedCategories.push(key);\n      matchedSnippets[key] = hits.slice(0, 5);\n    }\n  }\n\n  const has = (k) => (matchedCategories.includes(k) ? 1 : 0);\n\n  return {\n    text,\n    regexp_relevant: matchedCategories.length > 0 ? 1 : 0,\n    classification: {\n      matched: matchedCategories.length > 0,\n      categories: matchedCategories,\n      matched_texts: matchedSnippets,\n      has_any_match: matchedCategories.length > 0 ? 1 : 0,\n\n      is_transcription: has('transcription'),\n      is_diarization: has('diarization'),\n      is_subtitles: has('subtitles'),\n      is_summary: has('summary'),\n      is_sentiment: has('sentiment'),\n      is_noiseHandling: has('noiseHandling'),\n      is_fileFormats: has('fileFormats'),\n    },\n  };\n}\n\n// 4) Обрабатываем элементы 2..N\nconst results = [];\n\nfor (let i = 1; i < allItems.length; i++) {\n  const item = allItems[i].json;\n\n  const pos = classifyText(item.text_positive);\n  const neg = classifyText(item.text_negative);\n\n  results.push({\n    json: {\n      row_number: item.row_number,\n      ID: item.ID,\n\n      text_positive: pos.text,\n      text_negative: neg.text,\n\n      regexp_relevant_positive: pos.regexp_relevant,\n      regexp_relevant_negative: neg.regexp_relevant,\n\n      classification_positive: pos.classification,\n      classification_negative: neg.classification,\n    },\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        -1728
+      ],
+      "id": "769e1705-a4ee-4feb-81f8-2cd1abbc8bb9",
+      "name": "Search for Thematic RegExp1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -1952
+      ],
+      "id": "9ddd48c2-0c28-480f-9344-ff4c2d980afa",
+      "name": "Execute me to test workflow1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -1728
+      ],
+      "id": "cb01685e-ec8a-41d3-a086-ee37205daefb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        -1728
+      ],
+      "id": "b242e463-121b-4593-8ee1-b5c89e9ee0cb",
+      "name": "Get Test Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "96c6ff51-f3d7-4814-8a6a-28c05e5aba25",
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b9490e1d-3b8a-4603-b33d-927412402b37",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        -1728
+      ],
+      "id": "efb8f2c3-74e1-43a8-a176-581be913e76f",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4973cb0-87f6-47e3-a534-cc3bb45cbc7d",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "740a42c2-2011-43c1-a0d6-1a60a356491c",
+              "name": "ID",
+              "value": "={{ $json.ID }}",
+              "type": "number"
+            },
+            {
+              "id": "f90e9ac0-beee-4800-ac9f-734c78d16f73",
+              "name": "text_positive",
+              "value": "={{ $json[\"Speech (ID 1)\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "62cde3d9-713c-4c69-92bc-61a3ced4e652",
+              "name": "text_negative",
+              "value": "={{ $json.col_5 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        -1728
+      ],
+      "id": "6afe9f46-dcdf-4991-bcbd-4eb8fb01e1e6",
+      "name": "Get Messages"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1648,
+        -1728
+      ],
+      "id": "00ddb389-6163-498f-b9dc-03e5e9f2c1e5",
+      "name": "Регулярки + Сообщения"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.ID }}",
+            "regexp_relevant_positive": "={{ $json.regexp_relevant_positive }}",
+            "regexp_relevant_negative": "={{ $json.regexp_relevant_negative }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text_positive",
+              "displayName": "text_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_positive",
+              "displayName": "llm_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "regexp_relevant_positive",
+              "displayName": "regexp_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text_negative",
+              "displayName": "text_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_negative",
+              "displayName": "llm_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "regexp_relevant_negative",
+              "displayName": "regexp_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 8,
+              "firstDataRow": 9
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2160,
+        -1728
+      ],
+      "id": "e43a8ad0-1d57-4989-9d74-93e062e36860",
+      "name": "Запись Тестового сообщения",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        -1488
+      ],
+      "id": "2f922fbe-f62b-4d7b-a506-267a276dc696",
+      "name": "Завершение итерации цикла"
+    },
+    {
+      "parameters": {
+        "content": "# Воркфлоу для запуска проверки ТЕСТОВЫХ сообщений по регулярным выражениям \n",
+        "height": 992,
+        "width": 2848,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -2128
+      ],
+      "id": "d4fcace9-2e1e-496a-9c3e-86631fc6c67d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:G2"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1216,
+        -1808
+      ],
+      "id": "e862216c-cfa9-4562-b5dc-8b6fec2d4b2b",
+      "name": "Get Regular Expression",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "462a2055-bbd7-4c8c-bd03-9568e5fb1fd2",
+              "name": "regexp",
+              "value": "={{ $json.col_2 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        -1808
+      ],
+      "id": "32472e9e-236d-426b-99b7-12901ab8d927",
+      "name": "RegExp"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1488,
+        -288
+      ],
+      "id": "a56ae40b-052e-4720-a6ce-49969d5e9272",
+      "name": "Цикл на каналы"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */10 * * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        -288
+      ],
+      "id": "ff6a1c35-352f-497c-8d97-36ce0952f2fb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        -624
+      ],
+      "id": "4059c3b3-7687-4eb9-9373-9c8f1b2e4325",
+      "name": "Execute me to test workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT chat_id, user_id, message_id, text, telegram_date\nFROM telegram_messages\nWHERE regexp_processed = 0\nLIMIT 500",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        -288
+      ],
+      "id": "a6108893-4669-498a-965a-f9ac10fc7e0b",
+      "name": "Сбор записей, не обработанных REGEXP",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Для использования workflow для ускорения процесса обработки сообщений LLM в ДАННОЙ ноде необходимо раскомментить строку с дополнительным условием   \"-- AND instance_id = `TargerValue`\", убрав пробел и два тире перед AND, `TargetValue` заменить на порядковый номер инстанса, который будет обрабатывать сообщения в данном workflow.\nКлонируйте workflow при необходимости увеличения instance_id, не забудьте обновить лист GetChannelIDs (указать новые инстансы) и в данной ноде укажите определённые номера инстансов в дополнительном условии \"-- AND instance_id = `TargerValue`\"."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2192,
+        -288
+      ],
+      "id": "f204e162-ec03-49db-9e84-cc1b6a0f3ad6",
+      "name": "Регулярки + Сообщения2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "462a2055-bbd7-4c8c-bd03-9568e5fb1fd2",
+              "name": "regexp",
+              "value": "={{ $('Get Regular Expression2').item.json.values()[2] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1856,
+        -400
+      ],
+      "id": "07971c74-869a-4f86-af34-a748616afd2e",
+      "name": "RegExp2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "47e0ccec-b0c8-4e9a-b4d0-f8b9bf9f27ec",
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "57031d7f-c304-4b85-a9d0-30d6d5abc010",
+              "leftValue": "={{ ($json.text_positive ?? '').trim() !== '' || ($json.text_negative ?? '').trim() !== '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        -1648
+      ],
+      "id": "b17f84f4-0fbc-41f2-b0f2-d1d4822e49f8",
+      "name": "Non empty message"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n\n  if (data.chat_id === undefined || data.message_id === undefined) {\n    return {\n      json: {\n        error: 'Missing chat_id or message_id',\n        data,\n      }\n    };\n  }\n\n  const { _debug, ...dataWithoutDebug } = data;\n\n  const regexpRelevant = Number(dataWithoutDebug.regexp_relevant ?? 0) ? 1 : 0;\n\n  const matchedCategories = Array.isArray(dataWithoutDebug.matched_categories)\n    ? dataWithoutDebug.matched_categories\n    : [];\n\n  const matchedTexts =\n    dataWithoutDebug.matched_texts &&\n    typeof dataWithoutDebug.matched_texts === 'object' &&\n    !Array.isArray(dataWithoutDebug.matched_texts)\n      ? dataWithoutDebug.matched_texts\n      : {};\n\n  const query = `\n    UPDATE telegram_messages\n    SET \n      regexp_processed = $1,\n      regexp_relevant = $2,\n      regexp_matched_categories = $3::jsonb,\n      regexp_matched_texts = $4::jsonb,\n      updated_at = CURRENT_TIMESTAMP\n    WHERE \n      chat_id = $5\n      AND message_id = $6\n    RETURNING \n      id,\n      chat_id,\n      message_id,\n      regexp_processed,\n      regexp_relevant,\n      regexp_matched_categories,\n      regexp_matched_texts,\n      updated_at;\n  `;\n\n  const params = [\n    1,\n    regexpRelevant,\n    JSON.stringify(matchedCategories),\n    JSON.stringify(matchedTexts),\n    String(dataWithoutDebug.chat_id),\n    String(dataWithoutDebug.message_id),\n  ];\n\n  return {\n    json: {\n      query,\n      params,\n      update_data: {\n        chat_id: String(dataWithoutDebug.chat_id),\n        message_id: String(dataWithoutDebug.message_id),\n        regexp_processed: 1,\n        regexp_relevant: regexpRelevant,\n        regexp_matched_categories: matchedCategories,\n        regexp_matched_texts: matchedTexts,\n      },\n      action: 'update_regexp_status'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -288
+      ],
+      "id": "03613a3f-bc8b-4cf0-aa1a-13f38bb96d8e",
+      "name": "Подготовка SQL-запроса"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}",
+        "options": {
+          "queryReplacement": "={{ $json.params }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2976,
+        -288
+      ],
+      "id": "52d31a61-ccc9-4c5a-9c3d-ffdb32507d80",
+      "name": "Обновление флагов",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node — классификация сообщений по regexp из первого item\n\nconst allItems = $input.all();\n\nif (!allItems.length) {\n  throw new Error('Нет входных элементов');\n}\n\n// --------------------------------------------------\n// 1) Берём regexp из первого item\n// --------------------------------------------------\nconst first = allItems[0].json;\nlet regexText = first.regexp ?? first.RegExp ?? first.regex ?? first.patterns;\n\nif (!regexText) {\n  throw new Error('Первый элемент должен содержать поле regexp');\n}\n\nregexText = String(regexText).trim();\n\n// Если строка пришла в кавычках целиком\nif (\n  (regexText.startsWith('\"') && regexText.endsWith('\"')) ||\n  (regexText.startsWith(\"'\") && regexText.endsWith(\"'\"))\n) {\n  regexText = regexText.slice(1, -1);\n}\n\n// Убираем хвост \";\"\nregexText = regexText.replace(/;\\s*$/, '').trim();\n\n// Убираем возможную обёртку вида: const x = ...\nregexText = regexText.replace(/^\\s*(const|let|var)\\s+\\w+\\s*=\\s*/i, '').trim();\n\n// Ожидаем объект вида { key: /.../gi, key2: /.../gi }\nregexText = regexText.replace(/^\\s*\\{/, '').replace(/\\}\\s*$/, '').trim();\n\n// --------------------------------------------------\n// 2) Парсим пары key: /pattern/flags\n// --------------------------------------------------\nconst regexMap = {};\nconst pairRe = /(\\w+)\\s*:\\s*\\/((?:\\\\\\/|[^\\/])+)\\/([gimsuyd]*)/g;\n\nlet match;\nwhile ((match = pairRe.exec(regexText)) !== null) {\n  const key = match[1];\n  const pattern = match[2];\n  const flags = match[3] || '';\n\n  try {\n    regexMap[key] = new RegExp(pattern, flags);\n  } catch (e) {\n    throw new Error(`Ошибка в RegExp для \"${key}\": ${e.message}`);\n  }\n}\n\nif (!Object.keys(regexMap).length) {\n  throw new Error('Не удалось распарсить regexp-объект: не найдено ни одной пары key:/.../flags');\n}\n\n// --------------------------------------------------\n// 3) Функция классификации одного текста\n// --------------------------------------------------\nfunction classifyText(textRaw) {\n  const text = String(textRaw ?? '');\n\n  const matchedCategories = [];\n  const matchedTexts = {};\n\n  for (const [key, re] of Object.entries(regexMap)) {\n    // Новый экземпляр, чтобы избежать проблем с lastIndex у /g\n    const localRe = new RegExp(re.source, re.flags);\n    const hits = text.match(localRe);\n\n    if (hits && hits.length) {\n      matchedCategories.push(key);\n\n      // убираем дубли и ограничиваем количество\n      matchedTexts[key] = [...new Set(hits)].slice(0, 10);\n    }\n  }\n\n  return {\n    regexp_relevant: matchedCategories.length > 0 ? 1 : 0,\n    matched_categories: matchedCategories,\n    matched_texts: matchedTexts,\n  };\n}\n\n// --------------------------------------------------\n// 4) Обрабатываем items со 2-го по последний\n// --------------------------------------------------\nconst results = [];\n\nfor (let i = 1; i < allItems.length; i++) {\n  const item = allItems[i].json;\n  const text = item.text ?? '';\n\n  const classified = classifyText(text);\n\n  results.push({\n    json: {\n      ...item,\n      regexp_relevant: classified.regexp_relevant,\n      matched_categories: classified.matched_categories,\n      matched_texts: classified.matched_texts,\n    },\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        -288
+      ],
+      "id": "ea0b794d-8098-40a8-a13f-08631287eb9a",
+      "name": "Search RegExp"
+    },
+    {
+      "parameters": {
+        "content": "# Воркфлоу для запуска проверки РЕАЛЬНЫХ сообщений по регулярным выражениям \n",
+        "height": 992,
+        "width": 3664,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -832
+      ],
+      "id": "a20545c3-e400-4322-9a26-f9b1e1e8c52e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:J2"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        -288
+      ],
+      "id": "c35be9f3-3b6e-4b9f-82e8-fc1a736af608",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d2b0fdc-3fca-4a20-8520-e9d377094352",
+              "name": "tg_chat_id",
+              "value": "={{ $json[\"tg каналы chat_id\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        -288
+      ],
+      "id": "16ccf13d-cd43-4759-afc9-96819b8d0a18",
+      "name": "chat_ids_array"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d098eb8-6ac4-4c15-afd0-9e1ae86263a1",
+              "leftValue": "={{ JSON.parse($('chat_ids_array').first().json.tg_chat_id).map(Number).includes(Number($json.chat_id)) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        -288
+      ],
+      "id": "16a58de1-6b9b-48cf-963d-1f176f2daf16",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:G2"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        -288
+      ],
+      "id": "d90f0fcd-5a90-402f-962c-bc40211d1fae",
+      "name": "Get Regular Expression2",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Цикл на каналы1": {
+      "main": [
+        [
+          {
+            "node": "Execute me to test workflow1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Regular Expression",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Non empty message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for Thematic RegExp1": {
+      "main": [
+        [
+          {
+            "node": "Запись Тестового сообщения",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Test Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Test Data": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Get Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Messages": {
+      "main": [
+        [
+          {
+            "node": "Цикл на каналы1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Регулярки + Сообщения": {
+      "main": [
+        [
+          {
+            "node": "Search for Thematic RegExp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запись Тестового сообщения": {
+      "main": [
+        [
+          {
+            "node": "Завершение итерации цикла",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Завершение итерации цикла": {
+      "main": [
+        [
+          {
+            "node": "Цикл на каналы1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Regular Expression": {
+      "main": [
+        [
+          {
+            "node": "RegExp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegExp": {
+      "main": [
+        [
+          {
+            "node": "Регулярки + Сообщения",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Цикл на каналы": {
+      "main": [
+        [
+          {
+            "node": "Execute me to test workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Регулярки + Сообщения2",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "RegExp2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Regular Expression2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сбор записей, не обработанных REGEXP": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegExp2": {
+      "main": [
+        [
+          {
+            "node": "Регулярки + Сообщения2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Non empty message": {
+      "main": [
+        [
+          {
+            "node": "Регулярки + Сообщения",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Регулярки + Сообщения2": {
+      "main": [
+        [
+          {
+            "node": "Search RegExp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка SQL-запроса": {
+      "main": [
+        [
+          {
+            "node": "Обновление флагов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обновление флагов": {
+      "main": [
+        [
+          {
+            "node": "Цикл на каналы",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search RegExp": {
+      "main": [
+        [
+          {
+            "node": "Подготовка SQL-запроса",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "chat_ids_array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_ids_array": {
+      "main": [
+        [
+          {
+            "node": "Сбор записей, не обработанных REGEXP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Цикл на каналы",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Regular Expression2": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "efdd06ec-b684-456a-a1bf-927d9b393931",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "yaWknNekf1pSF0jE",
+  "tags": [
+    {
+      "updatedAt": "2026-03-09T01:03:14.691Z",
+      "createdAt": "2026-03-09T01:03:14.691Z",
+      "id": "lt0ofidCNtB6fge7",
+      "name": "Search ID1"
+    }
+  ]
+}

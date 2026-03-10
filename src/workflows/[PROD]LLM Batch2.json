@@ -1,0 +1,2614 @@
+{
+  "name": "[PROD]LLM Batch2",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}\n\nВходные сообщения:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2304,
+        2768
+      ],
+      "id": "d8f17fa4-1eb0-4113-b8e1-a9578eb76860",
+      "name": "AI Agent1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  \n  // Проверяем обязательные поля\n  if (data.chat_id === undefined || data.message_id === undefined) {\n    console.warn('Missing required fields:', data);\n    return {\n      json: {\n        error: 'Missing chat_id or message_id',\n        data: data\n      }\n    };\n  }\n  \n  // Убираем _debug из данных, если он есть\n  const { _debug, ...dataWithoutDebug } = data;\n  \n  // SQL запрос с проверкой существования\n  const query = `\n    UPDATE telegram_messages\n    SET \n      llm_processed = $1,\n      llm_is_relevant = $2,\n      updated_at = CURRENT_TIMESTAMP\n    WHERE \n      chat_id = $3 \n      AND message_id = $4\n    RETURNING \n      id,\n      (SELECT COUNT(*) FROM telegram_messages\n       WHERE chat_id = $3 AND message_id = $4) > 0 as record_exists;\n  `;\n  \n  const params = [\n    dataWithoutDebug.llm_processed,      // $1\n    dataWithoutDebug.llm_relevant,             // $2\n    dataWithoutDebug.chat_id,                     // $3\n    dataWithoutDebug.message_id                   // $4\n  ];\n  \n  return {\n    json: {\n      // Для PostgreSQL\n      query: query,\n      params: params.join(','),\n      \n      // Для логирования (только нужные поля, без _debug)\n      update_data: {\n        chat_id: dataWithoutDebug.chat_id,\n        message_id: dataWithoutDebug.message_id,\n        llm_processed: dataWithoutDebug.llm_processed,\n        llm_relevant: dataWithoutDebug.llm_relevant\n      },\n      action: 'update_llm_status'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        2704
+      ],
+      "id": "ee0b9546-86ba-4d0a-99af-7da3cafe759d",
+      "name": "Подготовка SQL-запроса1"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -288,
+        2928
+      ],
+      "id": "f0ab7638-5250-4614-a705-9b9101534ed2",
+      "name": "Цикл для батчинга элементов1",
+      "notesInFlow": true,
+      "notes": "Количество элементов в батче устанавливается в параметрах ноды"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT chat_id, user_id, message_id, text, telegram_date\nFROM telegram_messages\nWHERE llm_processed = 0 AND regexp_relevant = 0\n-- AND instance_id = 3\nLIMIT 200",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -896,
+        2928
+      ],
+      "id": "25bcaba0-20fb-407b-963e-2ef8ae096e47",
+      "name": "Сбор записей, не обработанных LLM1",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Для использования workflow для ускорения процесса обработки сообщений LLM в ДАННОЙ ноде необходимо раскомментить строку с дополнительным условием   \"-- AND instance_id = `TargerValue`\", убрав пробел и два тире перед AND, `TargetValue` заменить на порядковый номер инстанса, который будет обрабатывать сообщения в данном workflow.\nКлонируйте workflow при необходимости увеличения instance_id, не забудьте обновить лист GetChannelIDs (указать новые инстансы) и в данной ноде укажите определённые номера инстансов в дополнительном условии \"-- AND instance_id = `TargerValue`\"."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1568,
+        2928
+      ],
+      "id": "7e7682df-9714-48da-b330-02d3dc34a8d2",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "content": "## LLM анализирует содержание сообщений\nПроисходит сбор ещё не обработанных записей, их объединение в батч, разделение, подготовка запроса к БД.\n\nКоличество элементов в батче настраивается в ноде `Цикл для батчинга элементов`.\n\nМодель настраивается в ноде `OpenRouter Chat Model`\n\nПредлагаемая структура листа  LLM_Parser_log в Гугл Таблицах:\n- Автоматически заполняемые столбцы: `is_empty_output`,`is_valid_json` (валидность возвращённого JSON: 0 || 1 || 2(в случае пустого вывода - не возможно оценить валидность)), `success` (успешность выполнения 0 || 1), `runtime`.\n- Столбцы, заполняемые вручную: `Model` (используемая модель), `Run` (порядковый номер выполнения workflow)\n- Вычисляемые столбцы: `#1 Run`, `#2 Run` время в секундах, пройденное от начала выполнения воркфлоу до начала записи об успешности/неуспешности выполнения. #1 Run - чётные строки столбца runtime, #2 Run - нечётные строки столбца runtime. Например, вычисляем средние показатели с помощью СРЗНАЧ()",
+        "height": 320,
+        "width": 880,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        2240
+      ],
+      "id": "1d6b3b72-ca7f-47fd-bb9b-d2b99f11c027",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\n\n// Если структура точно такая: { json: { data: [...] } }\nreturn inputData.map(item => {\n  const filteredData = item.json.data.map(dataItem => ({\n    chat_id: dataItem.chat_id,\n    message_id: dataItem.message_id,\n    user_id: dataItem.user_id,\n    text: dataItem.text\n  }));\n  \n  return {\n    json: {\n      data: filteredData\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        2928
+      ],
+      "id": "e2be1b8a-c5dc-4656-815f-74c1e4486bfe",
+      "name": "Info for LLM1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        3632
+      ],
+      "id": "2fc6e61a-ca19-4599-99c7-0af17184db75",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3200,
+        2704
+      ],
+      "id": "56f0ef25-93e8-495a-911b-f33d020fe8b3",
+      "name": "Merge success output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем входные данные\nconst items = $input.all();\n\n// Создаем массив для результатов\nlet result = [];\n\n// Проходим по всем элементам\nitems.forEach((item, index) => {\n  // Проверяем, что data существует и является массивом\n  if (item.json.data && Array.isArray(item.json.data)) {\n    // Создаем новый массив для обработанных данных\n    const processedData = [];\n    \n    // Обрабатываем каждый элемент в data\n    item.json.data.forEach((dataItem, dataIndex) => {\n      // Создаем новый объект с порядковым id\n      const newItem = {\n        id: processedData.length + 1, // Порядковый id с шагом 1\n        text: dataItem.text || \"\" // Оставляем только текст\n      };\n      processedData.push(newItem);\n    });\n    \n    // Создаем новый объект с сохраненной структурой\n    result.push({\n      data: processedData\n    });\n  }\n});\n\n// Возвращаем результат\nreturn result.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        3024
+      ],
+      "id": "a3385ffb-ab59-4bbc-b018-aa33f3a7f7cd",
+      "name": "Id for LLM1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst originalData = items[0];\nconst llmResult = items[1];\n\n// Сообщения (исходные)\nconst messages = (originalData?.json?.data || []);\n// Результат LLM: массив объектов { llm_relevant, id }\nconst llmRows = (llmResult?.json?.output?.data || []);\n\n// id -> llm_relevant\nconst relById = new Map();\nfor (const row of llmRows) {\n  const id = Number(row?.id);\n  const rel = Number(row?.llm_relevant);\n  if (Number.isFinite(id) && (rel === 0 || rel === 1)) {\n    relById.set(id, rel);\n  }\n}\n\nconst result = [];\n\n// Связываем по порядку: i-ое сообщение соответствует id = i+1 (как у LLM)\nfor (let i = 0; i < messages.length; i++) {\n  const message = messages[i];\n\n  const id = i + 1;\n  const llmRelevant = relById.has(id) ? relById.get(id) : 0; // fallback 0\n\n  result.push({\n    chat_id: message.chat_id,\n    message_id: message.message_id,\n    user_id: message.user_id,\n    text: message.text,\n    llm_processed: 1,\n    llm_relevant: llmRelevant,\n  });\n}\n\nreturn [\n  {\n    json: {\n      data: result,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3456,
+        2704
+      ],
+      "id": "c3b4cd38-62c1-4142-934c-f2363a60d18c",
+      "name": "Data from LLM Merge1"
+    },
+    {
+      "parameters": {
+        "content": "# Анализ РЕАЛЬНЫХ сообщений\nПорядок выполнения:\n1) Старт таймера работы воркфлоу.\n2) Сбор записей из БД. Количество принимаемых данных указано в ноде `Сбор записей, не обработанных LLM`.\n3) Разделение входных данных на батчи в цикле. Количество элементов в батче указываетсе в ноде цикла. Для тестового прохода по всему циклу необходимо выполнить ноду `Execute me to test Workflow`.\n4) Объединение элементов батча в единый массив.",
+        "height": 624,
+        "width": 2720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        2608
+      ],
+      "id": "fafbeb22-4013-42f3-a5c4-c771fdbaab27",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Передача данных в LLM и валидация выходных данных от LLM\nПорядок выполнения:\n1) Подготовка информации для будущего объединения идентификаторов с результатом анализа LLM в ноде `Info for LLM`.\n2) Упрощение входных данных для LLM и снижение количества входных токенов в запросе в ноде `Id for LLM`.\n3) Выполнение запроса моделью в ноде `OpenRouter Chat Model`. Промпт находится в ноде `AI Agent`.\n4) Проверка корректности формата JSON и выходных данных на отсутствие пустого ответа.",
+        "height": 864,
+        "width": 1888
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        2544
+      ],
+      "id": "be53ef2f-0ac3-4310-b34c-317e65d1059a",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-mini:free",
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "presencePenalty": 0,
+          "temperature": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        2976
+      ],
+      "id": "4b3e812b-949d-44dd-967c-6da56da8e40a",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nIPKB3lCGZowVO4y",
+          "name": "OpenRouter account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Объединение ответа модели и выполнение запроса в БД.\nПорядок выполнения:\n.1. Объединение данных из LLM с идентификаторами в ноде `Data from LLM Merge`.\n.2.1. Разделение элементов батча.\n.2.2. Окончание таймера работы воркфлоу.\n.3. Фильтр на успешность выполнения обеих предыдущих нод, каждый мёрдж берёт соответствующие выходные данные.\n.4.1 Добавление записи в Гугл таблицы.\n.4.2. Подготовка параметрического SQL запроса.\n.5. Фильтр на успешное выполнение.\n6. Выполнение запроса в БД.",
+        "height": 1136,
+        "width": 1360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3056,
+        2320
+      ],
+      "id": "0b649ce0-07ac-4eac-83e9-f1eeb7a8af33",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Добавление записи о неудачном выполнении воркфлоу\n- Пустые выходные данные от LLM\n- Не валидный JSON",
+        "height": 336,
+        "width": 704,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        3520
+      ],
+      "id": "e250dfd4-255b-4e64-8171-e5599bfd23b3",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        2432
+      ],
+      "id": "4adaf650-4025-40b8-b16c-4d01afa909ce",
+      "name": "Execute me to test Workflow1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}",
+        "options": {
+          "queryReplacement": "={{ $json.params }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4176,
+        2704
+      ],
+      "id": "ffbeb9b0-dc08-4ed3-a5c8-a1892c9d6688",
+      "name": "Обновление обработанных записей1",
+      "credentials": {
+        "postgres": {
+          "id": "4z4s5W8zN4Xuxx6b",
+          "name": "Postgres account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"integer\",\n            \"minimum\": 1\n          },\n          \"llm_relevant\": {\n            \"type\": \"integer\",\n            \"enum\": [0, 1]\n          }\n        },\n        \"required\": [\"id\", \"llm_relevant\"],\n        \"additionalProperties\": false\n      }\n    }\n  },\n  \"required\": [\"data\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2368,
+        3088
+      ],
+      "id": "1cb787a4-91f8-462b-bb2e-7600bcd4b66d",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-large-preview:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        3248
+      ],
+      "id": "3d5ecd07-fb81-4681-81aa-e1a7695d5ba6",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nIPKB3lCGZowVO4y",
+          "name": "OpenRouter account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4176,
+        3312
+      ],
+      "id": "0e8c266b-bb3c-442b-ae35-7357e4466ae0",
+      "name": "Завершение итерации1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID",
+              "lookupValue": "-1"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:I3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        2752
+      ],
+      "id": "7d2a96e2-5844-46c8-831b-335a95931a07",
+      "name": "Сборка промпта1",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1856,
+        2768
+      ],
+      "id": "6bd1c565-142b-45cf-93c2-609baecb0921",
+      "name": "Автосборный промпт + сообщения1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a6e1cf25-3365-4463-8a5a-90631e4f8f30",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "24657f00-ace9-452d-aed7-a6594bd008d8",
+              "leftValue": "={{ $json.output.data.length }}",
+              "rightValue": "={{ $('Цикл для батчинга элементов1').all().length }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2704,
+        2768
+      ],
+      "id": "bded6f5e-9077-4b56-a740-d54cddc329d0",
+      "name": "If output is not emtpy and input len = output len"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9b0ad01-3315-4dba-8444-f2a9efcb2eb9",
+              "name": "user_prompt",
+              "value": "={{ $input.all()[0].json.values()[3] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1616,
+        2752
+      ],
+      "id": "34f0392b-42fe-4b77-92ec-7dacc660955d",
+      "name": "user_prompt",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items.length) return [];\n\nconst row = items[0].json;\nconst raw = String(row[\"tg каналы chat_id\"] ?? \"\").trim();\n\nlet target_chat_ids = [];\n\nif (raw) {\n  try {\n    // Основной вариант: поле хранится как JSON-строка массива\n    const parsed = JSON.parse(raw);\n\n    if (Array.isArray(parsed)) {\n      target_chat_ids = [...new Set(\n        parsed\n          .map(v => Number(v))\n          .filter(v => Number.isFinite(v))\n      )];\n    }\n  } catch (e) {\n    // Запасной вариант: если вдруг придёт не JSON, а список через переносы/запятые\n    target_chat_ids = [...new Set(\n      raw\n        .split(/[\\r\\n,]+/)\n        .map(s => s.trim())\n        .filter(Boolean)\n        .map(s => Number(s))\n        .filter(v => Number.isFinite(v))\n    )];\n  }\n}\n\nreturn [\n  {\n    json: {\n      target_chat_ids,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        2784
+      ],
+      "id": "d25c88df-3a75-4a7c-b895-bcdf4636d620",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        336,
+        2928
+      ],
+      "id": "fb00c66e-e7df-4356-a2f9-75453bc89e07",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "messageText": "={{\n\"Обработка реальных сообщений в workflow \" + $json.workflow_name\n+ \"\\nWorkflow ID: \" + $json.exectuion_id\n+ \"\\nОшибка: $json.error\"\n}}",
+        "message_thread_id": 0
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        2944,
+        3632
+      ],
+      "id": "c93892ed-0c4e-4415-9ef9-38e56a8425b7",
+      "name": "Send text message",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "186ed025-d4a2-4d39-a0ac-e8d37aeeb2ce",
+              "name": "workflow_name",
+              "value": "={{ $workflow.name}}",
+              "type": "string"
+            },
+            {
+              "id": "88ddd3ce-1665-4ab8-abdf-717ea8a74c60",
+              "name": "exectuion_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "bff4c751-594d-44ca-b091-1468a6f59b7a",
+              "name": "error",
+              "value": "len(input) != len(output)",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2704,
+        3632
+      ],
+      "id": "92591e76-d5e2-43e7-81c2-38459f1cc680",
+      "name": "Execess items in output"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items.length) {\n  console.log('Нет входных данных');\n  return [];\n}\n\nfunction parseTargetChatIds(value) {\n  if (Array.isArray(value)) {\n    return value\n      .map(v => Number(v))\n      .filter(v => Number.isFinite(v));\n  }\n\n  if (typeof value === 'string') {\n    const raw = value.trim();\n    if (!raw) return [];\n\n    try {\n      const parsed = JSON.parse(raw);\n      if (Array.isArray(parsed)) {\n        return parsed\n          .map(v => Number(v))\n          .filter(v => Number.isFinite(v));\n      }\n    } catch (e) {\n      return raw\n        .split(/[\\r\\n,]+/)\n        .map(s => Number(String(s).trim()))\n        .filter(v => Number.isFinite(v));\n    }\n  }\n\n  return [];\n}\n\n// 1) Ищем item с target_chat_ids\nlet targetSet = null;\nlet targetItemIndex = -1;\n\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i]?.json ?? {};\n\n  if (row.target_chat_ids !== undefined) {\n    const parsed = parseTargetChatIds(row.target_chat_ids);\n    targetSet = new Set(parsed);\n    targetItemIndex = i;\n    break;\n  }\n}\n\nif (!targetSet || targetSet.size === 0) {\n  console.log('Не найден или пуст target_chat_ids');\n  return [];\n}\n\nconst results = [];\nconst skippedChatIds = new Set();\nconst invalidChatIds = [];\nconst invalidMessageIds = [];\n\nlet processedCount = 0;\nlet skippedCount = 0;\n\n// 2) Фильтруем все остальные items\nfor (let i = 0; i < items.length; i++) {\n  if (i === targetItemIndex) continue;\n\n  const row = items[i]?.json ?? {};\n\n  if (row.chat_id === undefined || row.chat_id === null) {\n    continue;\n  }\n\n  processedCount += 1;\n\n  const chat_id = Number(row.chat_id);\n\n  if (!Number.isFinite(chat_id)) {\n    skippedCount += 1;\n    invalidChatIds.push({\n      item_index: i,\n      chat_id_raw: row.chat_id ?? null,\n      message_id: row.message_id ?? null,\n    });\n    continue;\n  }\n\n  const message_id =\n    row.message_id === undefined || row.message_id === null || row.message_id === ''\n      ? null\n      : Number(row.message_id);\n\n  if (row.message_id !== undefined && row.message_id !== null && row.message_id !== '' && !Number.isFinite(message_id)) {\n    invalidMessageIds.push({\n      item_index: i,\n      chat_id,\n      message_id_raw: row.message_id,\n    });\n  }\n\n  if (targetSet.has(chat_id)) {\n    results.push({\n      json: {\n        ...row,\n        chat_id,\n        message_id: Number.isFinite(message_id) ? message_id : row.message_id,\n      },\n    });\n  } else {\n    skippedCount += 1;\n    skippedChatIds.add(chat_id);\n  }\n}\n\n// 3) Логи\nif (skippedChatIds.size > 0) {\n  console.log(\n    `Не взял сообщения из chat_id (не входят в target_chat_ids): ${[...skippedChatIds].join(', ')}`\n  );\n}\n\nif (invalidChatIds.length > 0) {\n  console.log(\n    `Пропущены сообщения с некорректным chat_id: ${JSON.stringify(invalidChatIds)}`\n  );\n}\n\nif (invalidMessageIds.length > 0) {\n  console.log(\n    `Сообщения с некорректным message_id оставлены как есть: ${JSON.stringify(invalidMessageIds)}`\n  );\n}\n\nconsole.log(\n  `Проверено сообщений: ${processedCount}; Взято: ${results.length}; Не взято: ${skippedCount}`\n);\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        2928
+      ],
+      "id": "8495048d-ebab-45bd-8d26-07b7e08a6295",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}\n\nВходные сообщения:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1488,
+        96
+      ],
+      "id": "fc3cb6fe-3736-4327-bda7-9427d4a41212",
+      "name": "AI Agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -192,
+        240
+      ],
+      "id": "7e4b00b2-01df-4fe7-8854-6b01b1d18622",
+      "name": "Цикл для батчинга элементов",
+      "notesInFlow": true,
+      "notes": "Количество элементов в батче устанавливается в параметрах ноды"
+    },
+    {
+      "parameters": {
+        "content": "## LLM анализирует содержание сообщений\nПроисходит сбор ещё не обработанных записей, их объединение в батч, разделение, подготовка запроса к БД.\n\nКоличество элементов в батче настраивается в ноде `Цикл для батчинга элементов`.\n\nМодель настраивается в ноде `OpenRouter Chat Model`\n\nПредлагаемая структура листа  LLM_Parser_log в Гугл Таблицах:\n- Автоматически заполняемые столбцы: `is_empty_output`,`is_valid_json` (валидность возвращённого JSON: 0 || 1 || 2(в случае пустого вывода - не возможно оценить валидность)), `success` (успешность выполнения 0 || 1), `runtime`.\n- Столбцы, заполняемые вручную: `Model` (используемая модель), `Run` (порядковый номер выполнения workflow)\n- Вычисляемые столбцы: `#1 Run`, `#2 Run` время в секундах, пройденное от начала выполнения воркфлоу до начала записи об успешности/неуспешности выполнения. #1 Run - чётные строки столбца runtime, #2 Run - нечётные строки столбца runtime. Например, вычисляем средние показатели с помощью СРЗНАЧ()",
+        "height": 320,
+        "width": 880,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        -432
+      ],
+      "id": "a677aaab-20a2-42ea-9cfe-f126df1e0833",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        960
+      ],
+      "id": "2447d462-d977-4536-91da-de43a401bd2e",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2416,
+        32
+      ],
+      "id": "a2c7725b-c23f-43ba-9f3e-b5a0cf211dec",
+      "name": "Merge success output1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 1) Собираем исходные флаги по id\nconst sourceById = new Map();\n\n// 2) Собираем предикты LLM\nlet llmData = [];\n\nfor (const item of items) {\n  const data = item.json;\n\n  // Исходные сообщения с флагами positive/negative\n  if (data.id !== undefined && (data.positive === 1 || data.negative === 1)) {\n    sourceById.set(Number(data.id), {\n      positive: data.positive === 1 ? 1 : 0,\n      negative: data.negative === 1 ? 1 : 0,\n    });\n  }\n\n  // Результат LLM в формате { output: { data: [...] } }\n  if (data.output && Array.isArray(data.output.data)) {\n    llmData = data.output.data;\n  }\n\n  // На случай, если результат лежит в { data: [...] }\n  if (\n    Array.isArray(data.data) &&\n    data.data.length > 0 &&\n    data.data[0].id !== undefined &&\n    data.data[0].llm_relevant !== undefined\n  ) {\n    llmData = data.data;\n  }\n}\n\nif (!llmData.length) {\n  throw new Error('Не найден массив с результатами LLM: output.data или data');\n}\n\n// 3) Объединяем по id\nconst result = llmData.map((pred) => {\n  const id = Number(pred.id);\n  const llmRelevant = Number(pred.llm_relevant ?? 0);\n  const source = sourceById.get(id);\n\n  if (!source) {\n    throw new Error(`Не найден исходный item для id=${id}`);\n  }\n\n  const out = { id };\n\n  if (source.positive === 1) {\n    out.llm_relevant_positive = llmRelevant;\n  } else if (source.negative === 1) {\n    out.llm_relevant_negative = llmRelevant;\n  } else {\n    throw new Error(`Для id=${id} нет ни positive=1, ни negative=1`);\n  }\n\n  return { json: out };\n});\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2672,
+        32
+      ],
+      "id": "8b811c82-e81f-4a0f-9d25-82283ad8a1dd",
+      "name": "Data from LLM Merge"
+    },
+    {
+      "parameters": {
+        "content": "# Анализ ТЕСТОВЫХ сообщений\n===Использовать для работы с тестовыми сообщения, а также для проверки пайплайна реальных сообщений===\n\nПорядок выполнения:\n1) Старт таймера работы воркфлоу.\n2) Сбор записей из БД. Количество принимаемых данных указано в ноде `Сбор записей, не обработанных LLM`.\n3) Разделение входных данных на батчи в цикле. Количество элементов в батче указываетсе в ноде цикла. Для тестового прохода по всему циклу необходимо выполнить ноду `Execute me to test Workflow`.\n4) Объединение элементов батча в единый массив.",
+        "height": 592,
+        "width": 1904
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        -80
+      ],
+      "id": "251f97fa-737a-4127-a481-520b3734e419",
+      "name": "Sticky Note10",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Передача данных в LLM и валидация выходных данных от LLM\nПорядок выполнения:\n1) Подготовка информации для будущего объединения идентификаторов с результатом анализа LLM в ноде `Info for LLM`.\n2) Упрощение входных данных для LLM и снижение количества входных токенов в запросе в ноде `Id for LLM`.\n3) Выполнение запроса моделью в ноде `OpenRouter Chat Model`. Промпт находится в ноде `AI Agent`.\n4) Проверка корректности формата JSON и выходных данных на отсутствие пустого ответа.",
+        "height": 864,
+        "width": 1888
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -128
+      ],
+      "id": "e6e704ac-b643-45fb-8487-593f56c6cf08",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-mini:free",
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "presencePenalty": 0,
+          "temperature": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        304
+      ],
+      "id": "c1df79e1-f299-4824-971f-a49ae0abbb23",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nIPKB3lCGZowVO4y",
+          "name": "OpenRouter account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Объединение ответа модели и сохранение тестовых данных.\nПорядок выполнения:\n.1. Объединение данных из LLM с идентификаторами в ноде `Data from LLM Merge`.\n.2.1. Разделение элементов батча.\n.2.2. Окончание таймера работы воркфлоу.\n.3. Фильтр на успешность выполнения обеих предыдущих нод, каждый мёрдж берёт соответствующие выходные данные.\n.4.1 Добавление записи в Гугл таблицы.\n.4.2. Подготовка параметрического SQL запроса.\n.5. Фильтр на успешное выполнение.\n6. Выполнение запроса в БД.",
+        "height": 1104,
+        "width": 1360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -272
+      ],
+      "id": "a41010ea-dd44-488d-b600-658efe1a8863",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## Добавление записи о неудачном выполнении воркфлоу\n- Пустые выходные данные от LLM\n- Не валидный JSON",
+        "height": 336,
+        "width": 704,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        848
+      ],
+      "id": "11d70c7f-f0e2-450a-8aa2-2e274b963112",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"integer\",\n            \"minimum\": 1\n          },\n          \"llm_relevant\": {\n            \"type\": \"integer\",\n            \"enum\": [0, 1]\n          }\n        },\n        \"required\": [\"id\", \"llm_relevant\"],\n        \"additionalProperties\": false\n      }\n    }\n  },\n  \"required\": [\"data\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1552,
+        416
+      ],
+      "id": "10723c35-edcb-46f5-97d0-f38922012a3b",
+      "name": "Structured Output Parser",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-large-preview:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        576
+      ],
+      "id": "e2ee195c-c4f7-4320-9411-6148aa0453c5",
+      "name": "OpenRouter Chat Model4",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nIPKB3lCGZowVO4y",
+          "name": "OpenRouter account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:D5"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        96
+      ],
+      "id": "db732f2c-93ca-40c4-be2a-4cc58c1b9b62",
+      "name": "Сборка промпта",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        96
+      ],
+      "id": "237a3a75-689f-427d-96f5-e414cb164956",
+      "name": "Автосборный промпт + сообщения"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a6e1cf25-3365-4463-8a5a-90631e4f8f30",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "24657f00-ace9-452d-aed7-a6594bd008d8",
+              "leftValue": "={{ $json.output.data.length }}",
+              "rightValue": "={{ $('Цикл для батчинга элементов').all().length }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        96
+      ],
+      "id": "15b237a7-7aad-497f-a142-142eb7a743a2",
+      "name": "If output is not emtpy and input len = output len1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9b0ad01-3315-4dba-8444-f2a9efcb2eb9",
+              "name": "user_prompt",
+              "value": "={{ $input.all()[1].json.values()[3] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        96
+      ],
+      "id": "916d5ff4-6b5e-432c-a66b-7a2bae3723d4",
+      "name": "user_prompt1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "messageText": "={{\n\"Тестовый прогон данных в worflow \" + $json.workflow_name\n+ \"\\nWorkflow ID: \" + $json.exectuion_id\n+ \"\\nОшибка: $json.error\"\n}}",
+        "message_thread_id": 0
+      },
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        960
+      ],
+      "id": "d99d9c14-d091-461b-bcc6-6f7ae577a1f9",
+      "name": "Send text message1",
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "186ed025-d4a2-4d39-a0ac-e8d37aeeb2ce",
+              "name": "workflow_name",
+              "value": "={{ $workflow.name}}",
+              "type": "string"
+            },
+            {
+              "id": "88ddd3ce-1665-4ab8-abdf-717ea8a74c60",
+              "name": "exectuion_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "bff4c751-594d-44ca-b091-1468a6f59b7a",
+              "name": "error",
+              "value": "len(input) != len(output)",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        960
+      ],
+      "id": "e58bac57-ed8e-42f0-8908-00520c21ecf5",
+      "name": "Execess items in output1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        240
+      ],
+      "id": "35fe0203-2104-43f8-93d8-afcc1db066a9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1344,
+        240
+      ],
+      "id": "d84f14f1-f99f-48dd-a016-4bffa5cb7fa4",
+      "name": "Get Test Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "96c6ff51-f3d7-4814-8a6a-28c05e5aba25",
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b9490e1d-3b8a-4603-b33d-927412402b37",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -1152,
+        240
+      ],
+      "id": "1574bb9f-93f3-401d-8297-4d09e5fa7c7d",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4973cb0-87f6-47e3-a534-cc3bb45cbc7d",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "740a42c2-2011-43c1-a0d6-1a60a356491c",
+              "name": "ID",
+              "value": "={{ $json.ID }}",
+              "type": "number"
+            },
+            {
+              "id": "f90e9ac0-beee-4800-ac9f-734c78d16f73",
+              "name": "text_positive",
+              "value": "={{ $json.values()[2] }}",
+              "type": "string"
+            },
+            {
+              "id": "62cde3d9-713c-4c69-92bc-61a3ced4e652",
+              "name": "text_negative",
+              "value": "={{ $json.col_5 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        240
+      ],
+      "id": "94a2b73a-47a4-46c9-b7af-a1bc05ddfc84",
+      "name": "Get Messages"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "47e0ccec-b0c8-4e9a-b4d0-f8b9bf9f27ec",
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "57031d7f-c304-4b85-a9d0-30d6d5abc010",
+              "leftValue": "={{ ($json.text_positive ?? '').trim() !== '' || ($json.text_negative ?? '').trim() !== '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -704,
+        240
+      ],
+      "id": "98d1e8b5-bdef-48c8-9bd9-7bd9df059e34",
+      "name": "Non empty message"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst result = [];\n\n// Сначала positive\nfor (const item of items) {\n  const data = item.json;\n\n  const text = String(data.text_positive ?? '').trim();\n  if (!text) continue;\n\n  result.push({\n    json: {\n      id: data.ID ?? data.id ?? null,\n      text,\n      positive: 1,\n    },\n  });\n}\n\n// Потом negative\nfor (const item of items) {\n  const data = item.json;\n\n  const text = String(data.text_negative ?? '').trim();\n  if (!text) continue;\n\n  result.push({\n    json: {\n      id: data.ID ?? null,\n      text,\n      negative: 1,\n    },\n  });\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        240
+      ],
+      "id": "de7d1054-20d8-487e-a18d-02c6ceaab271",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      id: data.id ?? null,\n      text: data.text ?? '',\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        368
+      ],
+      "id": "cdd4c051-d5d4-4c6e-aece-ef763101777b",
+      "name": "Multiple items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst result = {};\n\nitems.forEach((item) => {\n  const data = item.json;\n  const id = data.id ?? data.ID ?? null;\n\n  if (id === null) {\n    return;\n  }\n\n  result[`id_${id}`] = id;\n  result[`text_${id}`] = data.text ?? '';\n});\n\nreturn [\n  {\n    json: result,\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        560
+      ],
+      "id": "08f328a0-805b-4105-958c-63d3255f0a17",
+      "name": "Single item",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        752,
+        368
+      ],
+      "id": "d55c21af-fc9f-4299-9fa2-67d65507fce6",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length < 2) {\n  throw new Error('Ожидаю минимум 2 item: prompt и data');\n}\n\nconst userPrompt = items[0].json.user_prompt;\nconst data = items[1].json.data;\n\nreturn [\n  {\n    json: {\n      prompt: userPrompt,\n      data,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        96
+      ],
+      "id": "545764cb-a63f-4a8a-be24-74b1e2964f53",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3504,
+        624
+      ],
+      "id": "d49c98f9-03bc-43c2-9f1d-f36e5df568dc",
+      "name": "Завершение итерации"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "llm_relevant_positive": "={{ $json.llm_relevant_positive }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text_positive",
+              "displayName": "text_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_positive",
+              "displayName": "llm_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "regexp_relevant_positive",
+              "displayName": "regexp_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text_negative",
+              "displayName": "text_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_negative",
+              "displayName": "llm_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "regexp_relevant_negative",
+              "displayName": "regexp_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 8,
+              "firstDataRow": 9
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        -64
+      ],
+      "id": "e88373b9-016e-48bd-a165-d2eedb6e739e",
+      "name": "True Test Predict1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "llm_relevant_negative": "={{ $json.llm_relevant_negative }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text_positive",
+              "displayName": "text_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_positive",
+              "displayName": "llm_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "regexp_relevant_positive",
+              "displayName": "regexp_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text_negative",
+              "displayName": "text_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_negative",
+              "displayName": "llm_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "regexp_relevant_negative",
+              "displayName": "regexp_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 8,
+              "firstDataRow": 9
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        128
+      ],
+      "id": "48d4e125-ba07-42a2-a5c0-4c8c6f5dbb07",
+      "name": "False Test Predict1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.llm_relevant_positive }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "e585c469-3846-4614-accf-b32bbcd06124"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "positive predict"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6dafdba2-4a04-46d0-a45d-a799c7c7ebd6",
+                    "leftValue": "={{ $json.llm_relevant_negative }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "negative predict"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2896,
+        32
+      ],
+      "id": "29af3510-0c3e-4b61-a5db-027013747232",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items.length) {\n  throw new Error('Нет входных items');\n}\n\nconst data = items[0].json.data;\n\nif (!Array.isArray(data)) {\n  throw new Error('Ожидается массив в items[0].json.data');\n}\n\nconst byId = new Map();\n\nfor (const row of data) {\n  const id = row.id;\n\n  if (id === undefined || id === null) continue;\n\n  if (!byId.has(id)) {\n    byId.set(id, { id: Number(id) });\n  }\n\n  const out = byId.get(id);\n\n  if (row.llm_relevant_positive !== undefined) {\n    out.llm_relevant_positive = Number(row.llm_relevant_positive);\n  }\n\n  if (row.llm_relevant_negative !== undefined) {\n    out.llm_relevant_negative = Number(row.llm_relevant_negative);\n  }\n}\n\nreturn Array.from(byId.values()).map(row => ({ json: row }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        -448
+      ],
+      "id": "d09f958a-6229-4e6a-8781-1a57407e26f4",
+      "name": "Code in JavaScript4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -448
+      ],
+      "id": "a8d961f1-0968-414f-81e5-babb7d104143",
+      "name": "Aggregate1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Запись обоих предиктов одной строкой\n",
+        "height": 384,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -576
+      ],
+      "id": "42bf4f2e-7f8c-4568-b9a2-7d768914004d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "llm_relevant_positive": "={{ $json.llm_relevant_positive }}",
+            "llm_relevant_negative": "={{ $json.llm_relevant_negative }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text_positive",
+              "displayName": "text_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_positive",
+              "displayName": "llm_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "regexp_relevant_positive",
+              "displayName": "regexp_relevant_positive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text_negative",
+              "displayName": "text_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "llm_relevant_negative",
+              "displayName": "llm_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "regexp_relevant_negative",
+              "displayName": "regexp_relevant_negative",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 8,
+              "firstDataRow": 9
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -448
+      ],
+      "id": "fb672dc0-58cf-4126-a701-430853e8f25c",
+      "name": "Test Predict Update",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        16,
+        16
+      ],
+      "id": "9ae68da4-0e1b-4003-8cb1-9ec46bb0d07a",
+      "name": "Finish Cycle"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d2b0fdc-3fca-4a20-8520-e9d377094352",
+              "name": "tg_chat_id",
+              "value": "={{ $json[\"tg каналы chat_id\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        2928
+      ],
+      "id": "5139d7c6-1cf2-41da-97ed-0191d71294b6",
+      "name": "chat_ids_array"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        896,
+        2928
+      ],
+      "id": "49d467b3-0a6c-4490-9734-d05149a9e843",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID",
+              "lookupValue": "-1"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:J3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -48,
+        2784
+      ],
+      "id": "6fee6031-8ec2-4682-800b-2fd47007a119",
+      "name": "Get target_chat_id",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length < 2) {\n  throw new Error('Ожидаю минимум 2 item: prompt и data');\n}\n\nconst userPrompt = items[0].json.user_prompt;\nconst data = items[1].json.data;\n\nreturn [\n  {\n    json: {\n      prompt: userPrompt,\n      data,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        2768
+      ],
+      "id": "3f8386d1-7200-4114-bd5e-17e7e85a0742",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst results = [];\n\nfor (const item of items) {\n  const data = item?.json?.data || [];\n\n  for (const row of data) {\n    const llm_relevant = Number(row?.llm_relevant);\n    const llm_processed = Number(row?.llm_processed);\n\n    results.push({\n      json: {\n        chat_id: row.chat_id,\n        message_id: row.message_id,\n        user_id: row.user_id,\n        text: row.text,\n        llm_processed,\n        llm_relevant,\n      },\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3696,
+        2704
+      ],
+      "id": "532b44ef-96ab-4fdb-bacd-f15205bdd5ae",
+      "name": "Разделение элементов агрегации1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d098eb8-6ac4-4c15-afd0-9e1ae86263a1",
+              "leftValue": "={{ JSON.parse($('chat_ids_array').first().json.tg_chat_id).map(Number).includes(Number($json.chat_id)) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        2928
+      ],
+      "id": "baa44de9-57de-4bfa-99f7-c9e336127124",
+      "name": "If message chat_id IN (targert_chat_id)"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1010465904,
+          "mode": "list",
+          "cachedResultName": "Search Boards",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:J2"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1344,
+        2928
+      ],
+      "id": "d032a5a6-ea71-4f46-a353-c8605e3435b2",
+      "name": "Get_chat_ids",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "If output is not emtpy and input len = output len",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка SQL-запроса1": {
+      "main": [
+        [
+          {
+            "node": "Обновление обработанных записей1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Цикл для батчинга элементов1": {
+      "main": [
+        [
+          {
+            "node": "Execute me to test Workflow1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get target_chat_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Сбор записей, не обработанных LLM1": {
+      "main": [
+        [
+          {
+            "node": "If message chat_id IN (targert_chat_id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get_chat_ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Info for LLM1": {
+      "main": [
+        [
+          {
+            "node": "Merge success output",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Сборка промпта1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Id for LLM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Merge success output": {
+      "main": [
+        [
+          {
+            "node": "Data from LLM Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Id for LLM1": {
+      "main": [
+        [
+          {
+            "node": "Автосборный промпт + сообщения1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Data from LLM Merge1": {
+      "main": [
+        [
+          {
+            "node": "Разделение элементов агрегации1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обновление обработанных записей1": {
+      "main": [
+        [
+          {
+            "node": "Завершение итерации1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Завершение итерации1": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сборка промпта1": {
+      "main": [
+        [
+          {
+            "node": "user_prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Автосборный промпт + сообщения1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If output is not emtpy and input len = output len": {
+      "main": [
+        [
+          {
+            "node": "Merge success output",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Execess items in output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user_prompt": {
+      "main": [
+        [
+          {
+            "node": "Автосборный промпт + сообщения1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send text message": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execess items in output": {
+      "main": [
+        [
+          {
+            "node": "Send text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If output is not emtpy and input len = output len1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Цикл для батчинга элементов": {
+      "main": [
+        [
+          {
+            "node": "Finish Cycle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Multiple items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Single item",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Сборка промпта",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge success output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge success output1": {
+      "main": [
+        [
+          {
+            "node": "Data from LLM Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data from LLM Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сборка промпта": {
+      "main": [
+        [
+          {
+            "node": "user_prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Автосборный промпт + сообщения": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If output is not emtpy and input len = output len1": {
+      "main": [
+        [
+          {
+            "node": "Merge success output1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Execess items in output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user_prompt1": {
+      "main": [
+        [
+          {
+            "node": "Автосборный промпт + сообщения",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send text message1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execess items in output1": {
+      "main": [
+        [
+          {
+            "node": "Send text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Test Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Test Data": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Get Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Messages": {
+      "main": [
+        [
+          {
+            "node": "Non empty message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Non empty message": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Multiple items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Автосборный промпт + сообщения",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Завершение итерации": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "True Test Predict1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "False Test Predict1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "True Test Predict1": {
+      "main": [
+        [
+          {
+            "node": "Завершение итерации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "False Test Predict1": {
+      "main": [
+        [
+          {
+            "node": "Завершение итерации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Test Predict Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_ids_array": {
+      "main": [
+        [
+          {
+            "node": "Сбор записей, не обработанных LLM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Info for LLM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get target_chat_id": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разделение элементов агрегации1": {
+      "main": [
+        [
+          {
+            "node": "Подготовка SQL-запроса1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If message chat_id IN (targert_chat_id)": {
+      "main": [
+        [
+          {
+            "node": "Цикл для батчинга элементов1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_chat_ids": {
+      "main": [
+        [
+          {
+            "node": "chat_ids_array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Cuotassx3PEelIog",
+    "executionTimeout": 180
+  },
+  "versionId": "8a885bca-bf2b-46bb-a3ac-5bba6773065a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+  },
+  "id": "08NIRN2H1l2yIgsH",
+  "tags": [
+    {
+      "updatedAt": "2026-03-09T01:05:09.484Z",
+      "createdAt": "2026-03-09T01:05:09.484Z",
+      "id": "59GAEkUSAPNKDxMT",
+      "name": "Search ID2"
+    }
+  ]
+}

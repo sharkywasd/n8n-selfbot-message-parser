@@ -91,14 +91,14 @@
     {
       "parameters": {
         "content": "# Automatic Reconnect",
-        "height": 692,
-        "width": 656
+        "height": 1348,
+        "width": 1024
       },
       "id": "a2ad348c-b1b9-41da-8367-78bd41b3bb97",
       "name": "Sticky Note1",
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1248,
+        -1264,
         -208
       ],
       "typeVersion": 1
@@ -149,7 +149,7 @@
               "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
               "name": "sessionId",
               "type": "string",
-              "value": "={{ $json.sessionId }}"
+              "value": "=0bf4d4e5b3eb446ba88df0173256e475"
             },
             {
               "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
@@ -184,7 +184,7 @@
               "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
               "name": "sessionId",
               "type": "string",
-              "value": "67a853b868cd4f06a0113163ec8b2458"
+              "value": "0bf4d4e5b3eb446ba88df0173256e475"
             },
             {
               "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
@@ -219,7 +219,7 @@
               "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
               "name": "sessionId",
               "type": "string",
-              "value": "67a853b868cd4f06a0113163ec8b2458"
+              "value": "=0bf4d4e5b3eb446ba88df0173256e475"
             },
             {
               "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
@@ -307,10 +307,11 @@
       "name": "Check Session Connection",
       "type": "n8n-nodes-base.filter",
       "position": [
-        -1184,
-        320
+        -976,
+        960
       ],
-      "typeVersion": 2.2
+      "typeVersion": 2.2,
+      "disabled": true
     },
     {
       "parameters": {
@@ -329,97 +330,7 @@
     },
     {
       "parameters": {
-        "text": "=❌ {{ $('Automatic control').item.json[0].phoneNumber }} UserBot Error:\n{{ $json.toJsonString() }}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "id": "954e6f54-8252-4971-bc15-46415c9731a4",
-      "name": "BOT Send Closed Status message",
-      "type": "n8n-nodes-base.telegram",
-      "position": [
-        -1184,
-        -624
-      ],
-      "webhookId": "231c216e-646c-45e3-a3ca-145d48ca7e8d",
-      "typeVersion": 1.2,
-      "credentials": {
-        "telegramApi": {
-          "id": "ZEr6JlBlLJEvRbyV",
-          "name": "Telegram account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "messageText": "=❌ {{ $('Automatic control').item.json[0].phoneNumber }} UserBot Error: {{ $json.toJsonString() }}",
-        "message_thread_id": 0
-      },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
-      "typeVersion": 1,
-      "position": [
-        -1184,
-        -416
-      ],
-      "id": "570fe717-5f12-4b92-9186-c29217a07c6c",
-      "name": "Send Status Closed",
-      "credentials": {
-        "telePilotApi": {
-          "id": "27P0ROJOnVZRJVms",
-          "name": "Personal Telegram CoPilot account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "text": "=✅ Lesnikov UserBot Info:\n{{ $json.toJsonString() }}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "id": "72746fa0-5f0c-4936-9279-020a42b8eaf5",
-      "name": "BOT Send Session Connection message",
-      "type": "n8n-nodes-base.telegram",
-      "position": [
-        -976,
-        512
-      ],
-      "webhookId": "f61ba988-2a26-4d07-87b6-9ef9e9eab2bc",
-      "typeVersion": 1.2,
-      "credentials": {
-        "telegramApi": {
-          "id": "ZEr6JlBlLJEvRbyV",
-          "name": "Telegram account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "messageText": "=✅ UserBot Info:\n{{ $json.toJsonString() }}",
-        "message_thread_id": 0
-      },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
-      "typeVersion": 1,
-      "position": [
-        -976,
-        320
-      ],
-      "id": "35b847e0-bd13-4f84-aca1-0ab816e42473",
-      "name": "Send Session Recconect",
-      "credentials": {
-        "telePilotApi": {
-          "id": "27P0ROJOnVZRJVms",
-          "name": "Personal Telegram CoPilot account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Инструкция по входу и работе воркфлоу\n1. Вводим API_ID & API_HASH в credentials ноды `Manual Control` (кликаем два раза на ноду)\n2. Нажимаем кнопку `Open Chat` на триггере `When chat message received`\n2. Вводим `/start` в чат\n3. Вводим код аутентификации\n4. Вводим облачный пароль\nДля обновления сессии используется автоматическая проверка и реконнект.\n\nДля перезапуска сессии необходимо:\n1. Написать в чат `/stop`\n2. Написать в чат `/start`\n\nДля завершения сессии и полного выхода из неё необходимо:\n1. Написать в чат `/stop`\n2. Написать в чат `/clear`\n\nДля корректной работы воркфлоу необходимо настроить:\n- Credentials для Telepilot (api_id & api_hash с сайта после создания нового приложения https://my.telegram.org/auth)\n- Chat_id чата (админского чата) в нодах `Send Status Closed` и `Send Session Recconect`, в который будет отправляться сообщение о статусе сессии. Если это группа с несколькими тредами - указать айди треда, в который необходимо отправить сообющение.\n- `session_id` при каждой новой сессии в ноде `Get Session Status`\n\nПосле настройки воркфлоу при закрытии сессии будет приходить сообщение о её закрытии, сессия будет снова запускаться и при успехе будет отправлено соответствующее сообщение..\nТакже можно настроить для отправки сообщений обычного бота от Telegram (ноды с префиксом BOT)\n\nБыстрые способы получения ID чата:\n- Telepilot нода `Search public chat by username/title` для каналов и групп.\n- Telepilot нода-триггер `On new message`: добавляете в воркфлоу, запускаете, отправляете сообщение с со своего аккаунта/получаете сообщение с необходимого аккаунта.\nАльтернативный способ - использовать воркфлоу `Channel_ID_Parser`",
+        "content": "## Инструкция по входу и работе воркфлоу\n1. Вводим API_ID & API_HASH в credentials ноды `Manual Control` (кликаем два раза на ноду)\n2. Нажимаем кнопку `Open Chat` на триггере `When chat message received`\n2. Вводим `/start` в чат\n3. Вводим код аутентификации\n4. Вводим облачный пароль\nДля обновления сессии используется автоматическая проверка и реконнект.\n\nДля перезапуска сессии необходимо:\n1. Написать в чат `/stop`\n2. Написать в чат `/start`\n\nДля завершения сессии и полного выхода из неё необходимо:\n1. Написать в чат `/stop`\n2. Написать в чат `/clear`\nЕсли столкнулись с проблемами при входе, повторяем /stop & /clear, ждём минуту и входим снова.\n\nДля корректной работы воркфлоу необходимо настроить:\n- Credentials для Telepilot (api_id & api_hash с сайта после создания нового приложения https://my.telegram.org/auth)\n- Chat_id чата (админского чата) в нодах `Send Status Closed` и `Send Auth Code`, в который будет отправляться сообщение о статусе сессии. Настраивается в Листе Google Sheets Speech, в столбце `куда отправляем релевантные сообщения`.\nЕсли это группа с несколькими тредами - указать айди треда, в который необходимо отправить сообющение.\n\nПосле настройки воркфлоу при закрытии сессии будет приходить сообщение о её закрытии, сессия будет снова запускаться и при успехе будет отправлено соответствующее сообщение.\n\nБыстрые способы получения ID чата:\n- Telepilot нода `Search public chat by username/title` для каналов и групп.\n- Telepilot нода-триггер `On new message`: добавляете в воркфлоу, запускаете, отправляете сообщение с со своего аккаунта/получаете сообщение с необходимого аккаунта.\nАльтернативный способ - использовать воркфлоу `chat_id_parser`",
         "height": 736,
         "width": 720,
         "color": 7
@@ -438,11 +349,358 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -784,
-        320
+        -752,
+        960
       ],
       "id": "2f54825d-83b9-4a94-b771-8c1768e3d63a",
       "name": "Execute me to test Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c4f4ca-ff60-45ac-9c26-d8e6661f541a",
+              "name": "sessionId",
+              "type": "string",
+              "value": "="
+            },
+            {
+              "id": "23010324-6358-4aec-a8eb-fa7a174123f1",
+              "name": "action",
+              "type": "string",
+              "value": "sendMessage"
+            },
+            {
+              "id": "a35ef9f8-1dfc-4e34-a347-de6542358aad",
+              "name": "chatInput",
+              "type": "string",
+              "value": "mypassword"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "01aa4c77-179f-41da-84ff-3567c7f306ff",
+      "name": "MFA Password",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -976,
+        736
+      ],
+      "typeVersion": 3.4,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "login"
+      },
+      "id": "4a4565d4-9a9b-45db-ad94-5669a27ffe11",
+      "name": "Start auth1",
+      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "position": [
+        -1168,
+        960
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "telePilotApi": {
+          "id": "27P0ROJOnVZRJVms",
+          "name": "Personal Telegram CoPilot account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "08f33e60-eafc-4270-94ab-5f26549ea4d3",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ String($json) }}",
+              "rightValue": "Please provide AuthCode:"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4a3abf49-c138-4d15-a7b5-c6af5b5a7827",
+      "name": "Check Session Connection1",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -1168,
+        304
+      ],
+      "typeVersion": 2.2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:K3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -976,
+        304
+      ],
+      "id": "1d52933a-b79a-48c4-8bf8-c8c6ed034756",
+      "name": "Get chat_id",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.send_to }}",
+        "text": "Введите код ДФ аутентификации для входа в аккаунт",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        528
+      ],
+      "id": "33a5da82-8c08-4ba3-86b0-3b485f8ac918",
+      "name": "Send Auth Code",
+      "webhookId": "e1945a08-41b3-44c7-a6ad-c0a9dcc3f0e0",
+      "notesInFlow": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZEr6JlBlLJEvRbyV",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true,
+      "notes": "Используется для уведомления о разрыве сессии при ошибке сохранения сообщения."
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1168,
+        736
+      ],
+      "id": "88bbd446-e334-44b5-b872-ce7b6b161b7d",
+      "name": "Wait",
+      "webhookId": "e353e160-a70c-4e5a-ad34-ec8d4311b671",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca8a4a25-7048-4fc2-80f5-dfc32192b916",
+              "name": "=send_to",
+              "value": "={{ $input.first().json.values()[11] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1168,
+        528
+      ],
+      "id": "2d32de15-a50d-46a1-b7a1-21fa4a437d03",
+      "name": "Notification for chat_id",
+      "executeOnce": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "08f33e60-eafc-4270-94ab-5f26549ea4d3",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json[0].authState }}",
+              "rightValue": "authorizationStateReady"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11f38a64-52e4-4d39-9dfb-896af9c19f0e",
+      "name": "Check Session Connection2",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -752,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:K3"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1184,
+        -416
+      ],
+      "id": "745bf6b7-3dab-4519-acd4-a243d9f2d3b8",
+      "name": "Get chat_id1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca8a4a25-7048-4fc2-80f5-dfc32192b916",
+              "name": "=send_to",
+              "value": "={{ $input.first().json.values()[11] }}",
+              "type": "number"
+            },
+            {
+              "id": "b65ef466-4e62-44bb-a52f-1596e130a4d8",
+              "name": "text",
+              "value": "Account is logged out",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -976,
+        -416
+      ],
+      "id": "9a8992d5-e638-432b-be99-583a937ca0a3",
+      "name": "Notification for chat_id1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "text": "=❌ {{ $('Automatic control').item.json[0].phoneNumber }} UserBot Error:\n{{ $json.toJsonString() }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "954e6f54-8252-4971-bc15-46415c9731a4",
+      "name": "BOT Send Closed Status message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1248,
+        -656
+      ],
+      "webhookId": "231c216e-646c-45e3-a3ca-145d48ca7e8d",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZEr6JlBlLJEvRbyV",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.send_to }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -768,
+        -416
+      ],
+      "id": "8bab3043-1d03-44ab-8cb6-e799f6f8648a",
+      "name": "Send Status Closed",
+      "webhookId": "e1945a08-41b3-44c7-a6ad-c0a9dcc3f0e0",
+      "notesInFlow": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZEr6JlBlLJEvRbyV",
+          "name": "Telegram account"
+        }
+      },
+      "notes": "Используется для уведомления о разрыве сессии при ошибке сохранения сообщения."
     }
   ],
   "pinData": {},
@@ -462,7 +720,7 @@
       "main": [
         [
           {
-            "node": "Check Session Connection",
+            "node": "Check Session Connection2",
             "type": "main",
             "index": 0
           }
@@ -533,7 +791,7 @@
             "index": 0
           },
           {
-            "node": "Send Status Closed",
+            "node": "Get chat_id1",
             "type": "main",
             "index": 0
           }
@@ -544,7 +802,7 @@
       "main": [
         [
           {
-            "node": "Send Session Recconect",
+            "node": "Execute me to test Workflow",
             "type": "main",
             "index": 0
           }
@@ -567,11 +825,104 @@
         []
       ]
     },
-    "Send Session Recconect": {
+    "Check Session Connection1": {
       "main": [
         [
           {
-            "node": "Execute me to test Workflow",
+            "node": "Get chat_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_id": {
+      "main": [
+        [
+          {
+            "node": "Notification for chat_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MFA Password": {
+      "main": [
+        [
+          {
+            "node": "Start auth1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Auth Code": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start auth1": {
+      "main": [
+        [
+          {
+            "node": "Check Session Connection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "MFA Password",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notification for chat_id": {
+      "main": [
+        [
+          {
+            "node": "Send Auth Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Session Connection2": {
+      "main": [
+        []
+      ]
+    },
+    "Get chat_id1": {
+      "main": [
+        [
+          {
+            "node": "Notification for chat_id1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notification for chat_id1": {
+      "main": [
+        [
+          {
+            "node": "Send Status Closed",
             "type": "main",
             "index": 0
           }
@@ -584,7 +935,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "f9e0303f-90f3-45ac-89f2-f58a75e8eb3b",
+  "versionId": "96da610b-d69f-4d2f-a43a-162f76588c39",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"

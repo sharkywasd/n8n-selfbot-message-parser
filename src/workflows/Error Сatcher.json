@@ -10,7 +10,8 @@
         0
       ],
       "id": "8b1e8dc8-7296-490d-89b7-9dbadf9e0558",
-      "name": "Error Trigger"
+      "name": "Error Trigger",
+      "disabled": true
     },
     {
       "parameters": {
@@ -116,7 +117,8 @@
           "id": "c2HhsYLQ928pUJFE",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "disabled": true
     }
   ],
   "pinData": {},
@@ -180,7 +182,7 @@
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "e8f7a097-c3a0-41ec-b3e1-4869567721bf",
+  "versionId": "668d46f3-5846-4d11-9223-2ceb61e09a3b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
