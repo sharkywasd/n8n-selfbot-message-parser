@@ -501,7 +501,7 @@
         ],
         "options": {}
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilotTrigger",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilotTrigger",
       "typeVersion": 1,
       "position": [
         -16,

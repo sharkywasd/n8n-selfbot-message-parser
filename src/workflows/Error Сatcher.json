@@ -19,7 +19,7 @@
         "messageText": "={{ $json.execution.id }};{{ $json.execution.url }}\n{{ $json.execution.error.message }};{{ $json.execution.error.stack }}\n{{ $json.execution.mode }};\n{{ $json.workflow.id }};{{ $json.workflow.name }}",
         "message_thread_id": 0
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         496,

@@ -6,7 +6,7 @@
         "operation": "searchPublicChat",
         "username": "={{ $json.values()[1] }}"
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         1328,

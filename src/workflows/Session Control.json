@@ -56,7 +56,7 @@
       },
       "id": "c30ecb0c-4ace-4fcc-9139-0dc900e11991",
       "name": "Stop auth",
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "position": [
         -976,
         -144
@@ -75,7 +75,7 @@
       },
       "id": "67b1df13-b6bb-4ef4-8b05-866a0e1f158e",
       "name": "Start auth",
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "position": [
         -976,
         80
@@ -109,7 +109,7 @@
       },
       "id": "58231b99-85bf-4914-b06e-ef898e2f51c9",
       "name": "Manual control",
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "position": [
         -1872,
         128
@@ -128,7 +128,7 @@
       },
       "id": "11a27c1a-b4ec-4874-9a5c-8e079d919dd4",
       "name": "Automatic control",
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "position": [
         -1648,
         -288
@@ -397,7 +397,7 @@
       },
       "id": "4a4565d4-9a9b-45db-ad94-5669a27ffe11",
       "name": "Start auth1",
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "position": [
         -1168,
         960

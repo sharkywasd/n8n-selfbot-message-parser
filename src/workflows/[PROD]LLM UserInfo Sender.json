@@ -45,7 +45,7 @@
         "operation": "getUser",
         "user_id": "={{ $json.user_id }}"
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         320,
@@ -68,7 +68,7 @@
         "messageText": "=Новое релевантное сообщение:\nДата сообщения: {{ $json.telegram_date }}\nСсылка: {{ $json.message_link }}\nТекст сообщения: {{ $json.text }}\n\nПользователь: {{ $json.username }}\n{{ $json.user_name }}\n\nЧат: {{ $json.chat_username }}\nULR: {{ $json.chat_url }}",
         "message_thread_id": 0
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         2064,
@@ -450,7 +450,7 @@
         "chat_id": "={{ $json.messages[0].chat_id }}",
         "message_id": "={{ $json.messages[0].id }}"
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         560,
@@ -472,7 +472,7 @@
         "from_message_id": "={{ $json.message_id + 1 }}",
         "limit": "1"
       },
-      "type": "@telepilotco/n8n-nodes-telepilot.telePilot",
+      "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
         -320,
