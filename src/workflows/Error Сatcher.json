@@ -6,34 +6,27 @@
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        0
+        320,
+        208
       ],
-      "id": "8b1e8dc8-7296-490d-89b7-9dbadf9e0558",
-      "name": "Error Trigger",
-      "disabled": true
+      "id": "fce47126-13ae-4136-b364-962e9aaf05ab",
+      "name": "Error Trigger"
     },
     {
       "parameters": {
         "resource": "message",
+        "chat_id": "={{ $json.send_to }}",
         "messageText": "={{ $json.execution.id }};{{ $json.execution.url }}\n{{ $json.execution.error.message }};{{ $json.execution.error.stack }}\n{{ $json.execution.mode }};\n{{ $json.workflow.id }};{{ $json.workflow.name }}",
         "message_thread_id": 0
       },
       "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        496,
-        -176
+        1312,
+        208
       ],
-      "id": "984426c9-278e-4d58-9d0a-669b8083ee58",
-      "name": "Send text message",
-      "credentials": {
-        "telePilotApi": {
-          "id": "27P0ROJOnVZRJVms",
-          "name": "Personal Telegram CoPilot account"
-        }
-      },
-      "disabled": true
+      "id": "2b13e9ae-9e62-4441-8f1c-681944030394",
+      "name": "Send text message"
     },
     {
       "parameters": {
@@ -42,10 +35,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        240,
-        0
+        560,
+        208
       ],
-      "id": "1c3fe420-4ea3-4a52-84dc-fca8c8b5d55c",
+      "id": "5e5aa1ab-87b4-408f-a773-716bcc22d9a2",
       "name": "Loop Over Items"
     },
     {
@@ -55,10 +48,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        752,
-        0
+        1488,
+        208
       ],
-      "id": "d37a43a3-a132-4af1-a2ec-4303e037deac",
+      "id": "116b102a-501b-49bb-b56c-bbcbb75f845d",
       "name": "Wait",
       "webhookId": "4705d000-a684-4bda-b3de-d1af35968077"
     },
@@ -71,10 +64,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        0,
-        -528
+        304,
+        -288
       ],
-      "id": "8acb4475-89a3-4ccf-a168-aad32b2a279d",
+      "id": "995e1078-3b88-4ee0-ade2-ea5f26b7d8b3",
       "name": "Sticky Note"
     },
     {
@@ -107,18 +100,80 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        496,
-        0
+        1312,
+        448
       ],
-      "id": "ad7ee21a-9b4c-4ab9-9ca6-b1c529d3a2b4",
+      "id": "056ea64f-dc13-401b-9b58-ec2254ad8164",
       "name": "Write error in GSheets cell",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "c2HhsYLQ928pUJFE",
-          "name": "Google Sheets account"
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:K3"
+            }
+          }
         }
       },
-      "disabled": true
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        128
+      ],
+      "id": "15d13c4f-8e80-42cb-9298-a520cee04928",
+      "name": "Get chat_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca8a4a25-7048-4fc2-80f5-dfc32192b916",
+              "name": "=send_to",
+              "value": "={{ $input.first().json.values()[11] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        128
+      ],
+      "id": "522acb98-335c-486e-a0a5-c62ea1df0e6b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        208
+      ],
+      "id": "cddba8d3-c4ea-4f90-8c0e-023d7063ae74",
+      "name": "Merge"
     }
   ],
   "pinData": {},
@@ -139,16 +194,16 @@
         [],
         [
           {
-            "node": "Write error in GSheets cell",
+            "node": "Get chat_id",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
-      ]
-    },
-    "Send text message": {
-      "main": [
-        []
       ]
     },
     "Wait": {
@@ -164,9 +219,47 @@
     },
     "Write error in GSheets cell": {
       "main": [
+        []
+      ]
+    },
+    "Send text message": {
+      "main": [
         [
           {
             "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_id": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send text message",
             "type": "main",
             "index": 0
           }
@@ -177,16 +270,13 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false,
-    "timeSavedMode": "fixed",
-    "saveExecutionProgress": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "668d46f3-5846-4d11-9223-2ceb61e09a3b",
+  "versionId": "84a5af44-ce83-436f-b5e6-28e849966bc0",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
+    "instanceId": "fede15d8491a2064449a09c5d3b72e63d261205a6b5f6d6735c57c3cb06862bd"
   },
-  "id": "Cuotassx3PEelIog",
+  "id": "VBCs3JUf2uyNGChK",
   "tags": []
 }

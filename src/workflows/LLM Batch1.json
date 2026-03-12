@@ -1,5 +1,5 @@
 {
-  "name": "[PROD]LLM Batch3",
+  "name": "[PROD]LLM Batch1",
   "nodes": [
     {
       "parameters": {
@@ -14,7 +14,7 @@
         2304,
         2768
       ],
-      "id": "0cbba9a6-b514-485b-8d95-19685b3564ac",
+      "id": "2443aa5a-8400-4a43-b548-e68f946c8691",
       "name": "AI Agent1",
       "executeOnce": true
     },
@@ -28,7 +28,7 @@
         3936,
         2704
       ],
-      "id": "580c8c17-744d-43e5-8f1b-e4c87bf5aa01",
+      "id": "7777ec0f-379b-440e-b1b9-419b1f47e2fe",
       "name": "Подготовка SQL-запроса1"
     },
     {
@@ -42,7 +42,7 @@
         -288,
         2928
       ],
-      "id": "d162ad99-807b-4421-af49-8fcd130b0a5c",
+      "id": "473d70a4-8986-44dc-831d-6c21d9dfd328",
       "name": "Цикл для батчинга элементов1",
       "notesInFlow": true,
       "notes": "Количество элементов в батче устанавливается в параметрах ноды"
@@ -59,7 +59,7 @@
         -896,
         2928
       ],
-      "id": "ab7f586d-6d20-4e82-a42e-70c3367a26f2",
+      "id": "ec8b9635-d93b-466a-8874-eb558825ae7e",
       "name": "Сбор записей, не обработанных LLM1",
       "credentials": {
         "postgres": {
@@ -75,7 +75,7 @@
           "interval": [
             {
               "field": "minutes",
-              "minutesInterval": 2
+              "minutesInterval": 20
             }
           ]
         }
@@ -86,7 +86,7 @@
         -1568,
         2928
       ],
-      "id": "8fe6b406-7b2f-4433-9931-6616f33b3fff",
+      "id": "1d091fee-9377-41e0-9324-558560673437",
       "name": "Schedule Trigger1"
     },
     {
@@ -102,7 +102,7 @@
         -1616,
         2240
       ],
-      "id": "605a26df-8a05-4973-91a6-8d77d6a47f4d",
+      "id": "9cde90ee-5a44-4af7-93d6-829744a36de7",
       "name": "Sticky Note5"
     },
     {
@@ -115,7 +115,7 @@
         1200,
         2928
       ],
-      "id": "03d27121-0952-4f6d-bdf8-fd9352ed17ec",
+      "id": "37600b12-6d47-4fd2-8fd2-92eac826177a",
       "name": "Info for LLM1"
     },
     {
@@ -126,7 +126,7 @@
         3168,
         3632
       ],
-      "id": "48aef04e-a98b-48da-baf6-7a98eeebaf18",
+      "id": "b5173444-872d-4f40-bb2c-26e032e0b328",
       "name": "No Operation, do nothing"
     },
     {
@@ -137,7 +137,7 @@
         3200,
         2704
       ],
-      "id": "a0225601-eab5-4ba6-ba88-510ada1df891",
+      "id": "7ff183d0-defd-4a83-8ae8-607df7799636",
       "name": "Merge success output"
     },
     {
@@ -150,7 +150,7 @@
         1488,
         3024
       ],
-      "id": "9d7f172d-d085-44aa-8d63-ce4a9de900fb",
+      "id": "d1f2cc04-e87c-4956-aa40-c792af3a2890",
       "name": "Id for LLM1"
     },
     {
@@ -163,7 +163,7 @@
         3456,
         2704
       ],
-      "id": "cf07f196-dfc3-40dc-8927-5f9f88314600",
+      "id": "fa541da8-7c76-491b-b516-02ddedcbdd77",
       "name": "Data from LLM Merge1"
     },
     {
@@ -178,7 +178,7 @@
         -1616,
         2608
       ],
-      "id": "22877296-1847-4ebf-858a-6dbacad5dc63",
+      "id": "53c759a7-e8f6-4a14-8cb8-ef32a651334c",
       "name": "Sticky Note6"
     },
     {
@@ -193,7 +193,7 @@
         1136,
         2544
       ],
-      "id": "8451c2c8-0458-4304-b63d-3208b539f134",
+      "id": "34b24b85-ef2d-4331-aa50-7a210884efe6",
       "name": "Sticky Note7"
     },
     {
@@ -213,7 +213,7 @@
         2304,
         2976
       ],
-      "id": "1705c54d-ea42-414b-8126-a48c573a34cf",
+      "id": "51b71614-bba5-46ec-a294-87743ec4f3fa",
       "name": "OpenRouter Chat Model2",
       "credentials": {
         "openRouterApi": {
@@ -234,7 +234,7 @@
         3056,
         2320
       ],
-      "id": "88083e44-1c0e-42bf-84c0-06b0f10fb67d",
+      "id": "4bd8c475-034e-48de-af62-4c493400e369",
       "name": "Sticky Note8"
     },
     {
@@ -250,7 +250,7 @@
         2656,
         3520
       ],
-      "id": "c9346898-a2f5-478a-8d61-93dd2bb7e141",
+      "id": "39c017b1-dda6-4635-8670-3282bddfd114",
       "name": "Sticky Note9"
     },
     {
@@ -261,7 +261,7 @@
         -96,
         2432
       ],
-      "id": "581aea2d-23c8-4227-b920-a73fe05001cb",
+      "id": "56827763-0f42-4a2b-8972-f03fc9c44f65",
       "name": "Execute me to test Workflow1"
     },
     {
@@ -278,7 +278,7 @@
         4176,
         2704
       ],
-      "id": "056c7ec5-b8d0-4a32-a438-21f9cbc97e8f",
+      "id": "cfaeaf84-3cad-4470-b74d-4be6e40c3901",
       "name": "Обновление обработанных записей1",
       "credentials": {
         "postgres": {
@@ -300,7 +300,7 @@
         2368,
         3088
       ],
-      "id": "6d123fcf-58d9-43b8-9187-6b63981d5090",
+      "id": "7c6d7da1-8202-4cf1-9dfa-70b622c1e96f",
       "name": "Structured Output Parser1"
     },
     {
@@ -314,7 +314,7 @@
         2368,
         3248
       ],
-      "id": "68101745-f8f9-4128-bddf-53e203a71b2b",
+      "id": "e909e9e3-cf3f-40a0-9762-a7ebd2d34e89",
       "name": "OpenRouter Chat Model3",
       "credentials": {
         "openRouterApi": {
@@ -331,7 +331,7 @@
         4176,
         3312
       ],
-      "id": "b0b754e6-b9c7-4404-a301-754890283282",
+      "id": "ebb9e55c-e916-44bd-9cc1-199bc3e0c083",
       "name": "Завершение итерации1"
     },
     {
@@ -345,10 +345,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "filtersUI": {
           "values": [
@@ -373,7 +373,7 @@
         1376,
         2752
       ],
-      "id": "17de9c0d-6325-4ac3-8370-82a0d627ef24",
+      "id": "fddd807d-48c1-4c25-ac18-3054044849d7",
       "name": "Сборка промпта1",
       "executeOnce": true,
       "credentials": {
@@ -391,7 +391,7 @@
         1856,
         2768
       ],
-      "id": "9a0e46fe-7dee-4c1d-9ec6-05df59db5ce0",
+      "id": "6b5942ad-441c-4050-8f57-c1683a722ae3",
       "name": "Автосборный промпт + сообщения1"
     },
     {
@@ -435,8 +435,33 @@
         2704,
         2768
       ],
-      "id": "e528d5c8-29c8-4c6a-9867-2d23af788597",
+      "id": "dbb0606f-7408-4168-aecf-e794810ab533",
       "name": "If output is not emtpy and input len = output len"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a2d5c27-7ba8-41cc-b05c-50f956e7c3e0",
+              "name": "search_id",
+              "value": "={{ (() => { const s = String($input.all()[1].json.keys()[1]); const d = (s.match(/\\d+/g) || []).join(''); return d ? Number(d) : null; })() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        3184
+      ],
+      "id": "b9d827a5-0f86-4412-8261-185ff54ad809",
+      "name": "search_id",
+      "executeOnce": true,
+      "disabled": true
     },
     {
       "parameters": {
@@ -458,7 +483,7 @@
         1616,
         2752
       ],
-      "id": "be02d18d-13b6-4b7b-b279-68547fb8996e",
+      "id": "ed42211d-61d6-41f4-a43d-bced03ac2f3a",
       "name": "user_prompt",
       "executeOnce": true
     },
@@ -472,7 +497,7 @@
         144,
         2784
       ],
-      "id": "4cd1f2ef-c6d1-4285-a44d-cc189da9d205",
+      "id": "c47827d8-6df4-45b0-813a-5bb75940ca60",
       "name": "Code in JavaScript"
     },
     {
@@ -483,7 +508,7 @@
         336,
         2928
       ],
-      "id": "fc4aa522-dc7a-4595-a760-dfeba671bd8d",
+      "id": "8f7ec0ca-b45b-4fad-9da2-ba4289747b78",
       "name": "Merge2"
     },
     {
@@ -498,7 +523,7 @@
         2944,
         3632
       ],
-      "id": "7d97225a-f198-4b22-88a1-9cd4bebbccf6",
+      "id": "fedca225-4cfa-425a-a10d-713cec805e19",
       "name": "Send text message",
       "credentials": {
         "telePilotApi": {
@@ -539,7 +564,7 @@
         2704,
         3632
       ],
-      "id": "a1b06988-a9d2-4bd0-96e7-1e173efa2516",
+      "id": "6ef81f90-1306-4fb4-aabc-d52e81f2dae4",
       "name": "Execess items in output"
     },
     {
@@ -552,7 +577,7 @@
         624,
         2928
       ],
-      "id": "335cf77d-b409-4876-9327-49f030c148de",
+      "id": "72b9820a-4bd0-4b51-800f-a3658710703c",
       "name": "Code in JavaScript1"
     },
     {
@@ -565,10 +590,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1488,
-        96
+        1504,
+        944
       ],
-      "id": "6d3c3230-630b-43e2-8795-c3a01b81bdf4",
+      "id": "9d0a5ac6-f7de-4a99-89c3-7c78b60776cc",
       "name": "AI Agent",
       "executeOnce": true
     },
@@ -580,10 +605,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -192,
-        240
+        -176,
+        1088
       ],
-      "id": "7ef0b291-5d06-404a-bd97-c90d51bb8267",
+      "id": "61d5d9f0-6506-45bb-bc8b-932e4a4a1189",
       "name": "Цикл для батчинга элементов",
       "notesInFlow": true,
       "notes": "Количество элементов в батче устанавливается в параметрах ноды"
@@ -598,10 +623,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1680,
-        -432
+        -1616,
+        384
       ],
-      "id": "1fd82875-14a3-40e9-b60c-ba2cec48f09b",
+      "id": "e06cdaed-beac-4526-a5bf-94d4db728174",
       "name": "Sticky Note"
     },
     {
@@ -609,10 +634,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2384,
-        960
+        2400,
+        1808
       ],
-      "id": "d424b5d3-a8cc-46ff-a608-33a52d69bf84",
+      "id": "600dad60-174a-4856-a8fa-55a7940d7a11",
       "name": "No Operation, do nothing1"
     },
     {
@@ -620,10 +645,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2416,
-        32
+        2432,
+        880
       ],
-      "id": "5feb619a-ca6d-46f6-aa72-dd2a9b959dc5",
+      "id": "b4d94232-3056-4a76-baa0-8c1a42605e60",
       "name": "Merge success output1"
     },
     {
@@ -633,10 +658,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2672,
-        32
+        2688,
+        880
       ],
-      "id": "1afdbb21-5ae8-405c-8fcd-29b35ede0cea",
+      "id": "256a04aa-e938-4f3e-9e17-6ee94f6f20c3",
       "name": "Data from LLM Merge"
     },
     {
@@ -648,10 +673,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1632,
-        -80
+        -1616,
+        768
       ],
-      "id": "a9c690d4-5b78-4fb1-8667-5115ad8f64f7",
+      "id": "efcd476f-16b4-4c37-bb35-2eeb8a8ecf0e",
       "name": "Sticky Note10",
       "disabled": true
     },
@@ -664,10 +689,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        352,
-        -128
+        368,
+        720
       ],
-      "id": "63b51b2d-fb21-4507-834d-3e7940684341",
+      "id": "516fd420-5f3a-46f9-bdb6-2e74c61d5886",
       "name": "Sticky Note11"
     },
     {
@@ -684,10 +709,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        1488,
-        304
+        1504,
+        1152
       ],
-      "id": "b5d5ebc0-9dae-40b4-b77d-9b5906a07f08",
+      "id": "a8079d15-a664-468f-ac20-6a98ca677f68",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
@@ -700,15 +725,15 @@
       "parameters": {
         "content": "## Объединение ответа модели и сохранение тестовых данных.\nПорядок выполнения:\n.1. Объединение данных из LLM с идентификаторами в ноде `Data from LLM Merge`.\n.2.1. Разделение элементов батча.\n.2.2. Окончание таймера работы воркфлоу.\n.3. Фильтр на успешность выполнения обеих предыдущих нод, каждый мёрдж берёт соответствующие выходные данные.\n.4.1 Добавление записи в Гугл таблицы.\n.4.2. Подготовка параметрического SQL запроса.\n.5. Фильтр на успешное выполнение.\n6. Выполнение запроса в БД.",
         "height": 1104,
-        "width": 1360
+        "width": 3248
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2352,
-        -272
+        2368,
+        576
       ],
-      "id": "7d85c68a-84e2-4d82-a250-bcc172722fba",
+      "id": "12b47402-bf69-4774-b1e7-0d02f34a5a41",
       "name": "Sticky Note12"
     },
     {
@@ -721,10 +746,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1872,
-        848
+        1888,
+        1696
       ],
-      "id": "edd6d40d-ee45-42bf-81d6-d95f7dfbbecf",
+      "id": "00caee91-fd67-48ba-a088-17a9c6d3c271",
       "name": "Sticky Note13"
     },
     {
@@ -736,10 +761,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1552,
-        416
+        1568,
+        1264
       ],
-      "id": "53a1baf0-338d-4a74-8bc8-0dc8d79914ee",
+      "id": "f6fb2044-201c-489b-9dca-b3e42831155e",
       "name": "Structured Output Parser",
       "executeOnce": false
     },
@@ -751,10 +776,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        1552,
-        576
+        1568,
+        1424
       ],
-      "id": "e031f433-72c6-4fa1-b076-5671dc45d8de",
+      "id": "f79ebf9c-594b-40e9-803b-cbb28216cfba",
       "name": "OpenRouter Chat Model4",
       "credentials": {
         "openRouterApi": {
@@ -774,10 +799,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "options": {
           "dataLocationOnSheet": {
@@ -791,10 +816,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        432,
-        96
+        448,
+        944
       ],
-      "id": "981faf67-23f5-4c54-8cde-163ae8743fe9",
+      "id": "394320d1-6e52-46a2-88f8-b2f5d17ce417",
       "name": "Сборка промпта",
       "executeOnce": true,
       "credentials": {
@@ -809,10 +834,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        976,
-        96
+        992,
+        944
       ],
-      "id": "89dc5359-8e79-4190-9030-a33ddbeedd75",
+      "id": "146faa41-a72b-4331-a775-a9df1258668d",
       "name": "Автосборный промпт + сообщения"
     },
     {
@@ -853,11 +878,36 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1920,
-        96
+        1936,
+        944
       ],
-      "id": "b5e3e129-b1e2-4182-ac2f-d74f010fb6bf",
+      "id": "db55f43d-b7e7-47d5-a90e-dca014f1563c",
       "name": "If output is not emtpy and input len = output len1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a2d5c27-7ba8-41cc-b05c-50f956e7c3e0",
+              "name": "search_id",
+              "value": "={{ (() => { const s = String($input.all()[1].json.keys()[1]); const d = (s.match(/\\d+/g) || []).join(''); return d ? Number(d) : null; })() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        1088
+      ],
+      "id": "f7121f68-0db2-4cc3-9c9e-3eab93683c47",
+      "name": "search_id1",
+      "executeOnce": true,
+      "disabled": true
     },
     {
       "parameters": {
@@ -876,10 +926,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        752,
-        96
+        768,
+        944
       ],
-      "id": "14cf75c2-7158-4f75-a966-7a1c542cc7d6",
+      "id": "148c85d2-a674-445f-ae23-51c6ca69d2b4",
       "name": "user_prompt1",
       "executeOnce": true
     },
@@ -892,10 +942,10 @@
       "type": "@sharkywasd/n8n-nodes-telepilot.telePilot",
       "typeVersion": 1,
       "position": [
-        2160,
-        960
+        2176,
+        1808
       ],
-      "id": "647dfb4a-dfa2-4996-9375-666704412c78",
+      "id": "ad0303ca-994c-40f2-80cd-5f8613327874",
       "name": "Send text message1",
       "credentials": {
         "telePilotApi": {
@@ -933,10 +983,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1920,
-        960
+        1936,
+        1808
       ],
-      "id": "4fc9fa67-dc97-4afb-8f72-4f028d58dc7d",
+      "id": "e7dcff15-b435-4514-b897-a857f50b78c3",
       "name": "Execess items in output1"
     },
     {
@@ -944,10 +994,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -1536,
-        240
+        -1520,
+        1088
       ],
-      "id": "779d2cbc-7b27-4f5a-8511-9502f32a5427",
+      "id": "0a560917-3a79-410d-8f30-d7fcea0726db",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -961,20 +1011,20 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1344,
-        240
+        -1328,
+        1088
       ],
-      "id": "c36b210a-c1e5-458d-8c02-3b1d7a328791",
+      "id": "199a9cba-e0f3-479f-8159-cbc0fa68f5f4",
       "name": "Get Test Data",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1021,10 +1071,10 @@
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.3,
       "position": [
-        -1152,
-        240
+        -1136,
+        1088
       ],
-      "id": "027a614a-6d20-48ae-be1b-a106e4487703",
+      "id": "7c92712a-e523-4a17-b4e1-c1f6943b8147",
       "name": "Filter"
     },
     {
@@ -1062,10 +1112,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -928,
-        240
+        -912,
+        1088
       ],
-      "id": "70ce405a-5019-43b9-ad87-7204326231a9",
+      "id": "9d747efd-4f8c-440d-886e-684072fce9fc",
       "name": "Get Messages"
     },
     {
@@ -1106,10 +1156,10 @@
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.3,
       "position": [
-        -704,
-        240
+        -688,
+        1088
       ],
-      "id": "d73c0983-381c-4864-b23a-58320a6f484b",
+      "id": "12be8058-355a-45e5-96fa-bb64920d3a3c",
       "name": "Non empty message"
     },
     {
@@ -1119,10 +1169,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -464,
-        240
+        -448,
+        1088
       ],
-      "id": "73cc3a4c-2c4b-43ec-8013-88412115afcf",
+      "id": "26520cd9-e176-439e-92df-f76640cad47b",
       "name": "Code in JavaScript2"
     },
     {
@@ -1132,11 +1182,25 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        368
+        448,
+        1216
       ],
-      "id": "571f2acf-69e7-4a8a-9dfa-ba5d2d87399f",
+      "id": "b32329c3-91b3-4734-90ce-a0a337fbca95",
       "name": "Multiple items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst result = {};\n\nitems.forEach((item) => {\n  const data = item.json;\n  const id = data.id ?? data.ID ?? null;\n\n  if (id === null) {\n    return;\n  }\n\n  result[`id_${id}`] = id;\n  result[`text_${id}`] = data.text ?? '';\n});\n\nreturn [\n  {\n    json: result,\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1408
+      ],
+      "id": "27d246a3-7779-4da7-bb55-28039a2485e1",
+      "name": "Single item",
+      "disabled": true
     },
     {
       "parameters": {
@@ -1146,10 +1210,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        752,
-        368
+        768,
+        1216
       ],
-      "id": "72d78717-1bd0-4eab-befe-05b8278ba1e8",
+      "id": "b26c3851-1db1-4e9e-b500-c76263a5fc92",
       "name": "Aggregate"
     },
     {
@@ -1159,10 +1223,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        96
+        1200,
+        944
       ],
-      "id": "aa792421-ab25-4e7c-8685-741fd10bf253",
+      "id": "59ead4a3-056f-499f-84e5-ee39890398d4",
       "name": "Code in JavaScript3"
     },
     {
@@ -1170,10 +1234,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        3504,
-        624
+        3520,
+        1472
       ],
-      "id": "a86611b6-a6cb-4733-9bc4-f125e609d28f",
+      "id": "f35c83f6-fe3c-48ee-88d7-0dcca585da2c",
       "name": "Завершение итерации"
     },
     {
@@ -1188,10 +1252,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1289,10 +1353,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3136,
-        -64
+        3152,
+        784
       ],
-      "id": "39689b90-bb9a-4ec7-8d22-3468dd15fab5",
+      "id": "f384decd-2806-491e-801a-10567f3acd73",
       "name": "True Test Predict1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1313,10 +1377,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1414,10 +1478,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3136,
-        128
+        3152,
+        976
       ],
-      "id": "47f410c5-bcd6-437d-853b-43a2f3ff5465",
+      "id": "7ca8c455-f857-4c91-9a60-9218b64fa80b",
       "name": "False Test Predict1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1487,10 +1551,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        2896,
-        32
+        2912,
+        880
       ],
-      "id": "b696be86-66ad-4c9b-8cff-de82ab333361",
+      "id": "0851e110-28b2-4987-8fff-9c22d9b2b1dd",
       "name": "Switch1"
     },
     {
@@ -1500,10 +1564,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        816,
-        -448
+        832,
+        400
       ],
-      "id": "7d72e49b-31c2-47d7-8b49-185cf0348ab5",
+      "id": "04019074-e30f-40ff-b443-c5f06f2a033e",
       "name": "Code in JavaScript4",
       "disabled": true
     },
@@ -1515,10 +1579,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        576,
-        -448
+        592,
+        400
       ],
-      "id": "17a4132c-3131-456b-8fed-f127e9349df9",
+      "id": "5383dcbb-d9ea-4b18-b6ec-2b562df00dd6",
       "name": "Aggregate1",
       "disabled": true
     },
@@ -1531,10 +1595,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        352,
-        -576
+        368,
+        272
       ],
-      "id": "855f0017-674c-494f-8475-bc5915758c11",
+      "id": "258e4354-3814-4dc8-90b3-b3d84eb8c34c",
       "name": "Sticky Note1"
     },
     {
@@ -1651,10 +1715,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1056,
-        -448
+        1072,
+        400
       ],
-      "id": "ee466138-0e75-4331-80e6-f2a68d752f61",
+      "id": "367568c5-27e8-4811-9c03-7f9f88b4c502",
       "name": "Test Predict Update",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1669,10 +1733,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        16,
-        16
+        32,
+        864
       ],
-      "id": "1a6171ff-fbf0-464e-89cf-0d4e3f48d75f",
+      "id": "8d116d2f-698e-4d4c-9c9e-e5367eb11046",
       "name": "Finish Cycle"
     },
     {
@@ -1695,8 +1759,48 @@
         -1136,
         2928
       ],
-      "id": "21c069d4-97c3-40f8-a71a-5dd6dc54cbe2",
+      "id": "3e0447f2-a119-4bbc-8c4e-6b8300bc1c91",
       "name": "chat_ids_array"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
+          "mode": "list",
+          "cachedResultName": "Palatine-selfbot-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1840716485,
+          "mode": "list",
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "B1:J2"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1344,
+        2928
+      ],
+      "id": "cc78844c-1221-4ea5-b084-b085698b84e3",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "c2HhsYLQ928pUJFE",
+          "name": "Google Sheets account"
+        }
+      }
     },
     {
       "parameters": {
@@ -1709,7 +1813,7 @@
         896,
         2928
       ],
-      "id": "ec951a8f-2db6-4a39-927a-015228a9cd67",
+      "id": "f1cdf4b0-f325-40c0-a557-063dc31c7af3",
       "name": "Aggregate2"
     },
     {
@@ -1723,10 +1827,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1542279637,
+          "value": 1840716485,
           "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
+          "cachedResultName": "Search Speech",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1840716485"
         },
         "filtersUI": {
           "values": [
@@ -1751,7 +1855,7 @@
         -48,
         2784
       ],
-      "id": "4e263a83-186e-4298-8525-623df8baa496",
+      "id": "654bca25-01f5-4f39-84a3-e5879bfd7053",
       "name": "Get target_chat_id",
       "executeOnce": true,
       "credentials": {
@@ -1771,7 +1875,7 @@
         2080,
         2768
       ],
-      "id": "9df81d96-9716-4fb9-b52e-8a4605dfc6cd",
+      "id": "2672291b-d342-4324-8ee5-a8b4c891915a",
       "name": "Code in JavaScript5"
     },
     {
@@ -1784,7 +1888,7 @@
         3696,
         2704
       ],
-      "id": "35ed7ed9-976c-4663-8488-ea3b320415a2",
+      "id": "cfb68c64-da2d-402e-a31a-1ea578dbdb10",
       "name": "Разделение элементов агрегации1"
     },
     {
@@ -1818,48 +1922,8 @@
         -640,
         2928
       ],
-      "id": "3eb21502-974c-4836-8686-77a416648955",
+      "id": "e1b1086a-bc67-4d6c-84e8-c5ce3c066e3b",
       "name": "If message chat_id IN (targert_chat_id)"
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA",
-          "mode": "list",
-          "cachedResultName": "Palatine-selfbot-n8n",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1542279637,
-          "mode": "list",
-          "cachedResultName": "Search CV",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
-        },
-        "options": {
-          "dataLocationOnSheet": {
-            "values": {
-              "rangeDefinition": "specifyRangeA1",
-              "range": "B1:J2"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        -1344,
-        2928
-      ],
-      "id": "ef59bde3-75d1-40c0-b3a2-e5488057be62",
-      "name": "Get_chat_ids",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "c2HhsYLQ928pUJFE",
-          "name": "Google Sheets account"
-        }
-      }
     }
   ],
   "pinData": {},
@@ -1924,7 +1988,7 @@
       "main": [
         [
           {
-            "node": "Get_chat_ids",
+            "node": "Get row(s) in sheet1",
             "type": "main",
             "index": 0
           }
@@ -2085,6 +2149,11 @@
         ]
       ]
     },
+    "search_id": {
+      "main": [
+        []
+      ]
+    },
     "user_prompt": {
       "main": [
         [
@@ -2174,6 +2243,11 @@
         [
           {
             "node": "Multiple items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Single item",
             "type": "main",
             "index": 0
           },
@@ -2283,6 +2357,11 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "search_id1": {
+      "main": [
+        []
       ]
     },
     "user_prompt1": {
@@ -2490,6 +2569,17 @@
         ]
       ]
     },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "chat_ids_array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "chat_ids_array": {
       "main": [
         [
@@ -2555,17 +2645,6 @@
           }
         ]
       ]
-    },
-    "Get_chat_ids": {
-      "main": [
-        [
-          {
-            "node": "chat_ids_array",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": false,
@@ -2578,18 +2657,18 @@
     "errorWorkflow": "Cuotassx3PEelIog",
     "executionTimeout": 180
   },
-  "versionId": "6d4362b0-d029-4adf-abc0-6072c3ad455c",
+  "versionId": "592854eb-352e-43c7-83af-b946a994a7d0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
   },
-  "id": "gTRr3AFihRIF1blg",
+  "id": "vOItPUuf0lSpsQuC",
   "tags": [
     {
-      "updatedAt": "2026-03-09T01:06:05.829Z",
-      "createdAt": "2026-03-09T01:06:05.829Z",
-      "id": "TefpxPmVXL8tp7TE",
-      "name": "Search ID3"
+      "updatedAt": "2026-03-09T01:03:14.691Z",
+      "createdAt": "2026-03-09T01:03:14.691Z",
+      "id": "lt0ofidCNtB6fge7",
+      "name": "Search ID1"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "name": "[PROD]LLM Batch2",
+  "name": "[PROD]LLM Batch3",
   "nodes": [
     {
       "parameters": {
@@ -14,7 +14,7 @@
         2304,
         2768
       ],
-      "id": "d8f17fa4-1eb0-4113-b8e1-a9578eb76860",
+      "id": "0cbba9a6-b514-485b-8d95-19685b3564ac",
       "name": "AI Agent1",
       "executeOnce": true
     },
@@ -28,7 +28,7 @@
         3936,
         2704
       ],
-      "id": "ee0b9546-86ba-4d0a-99af-7da3cafe759d",
+      "id": "580c8c17-744d-43e5-8f1b-e4c87bf5aa01",
       "name": "Подготовка SQL-запроса1"
     },
     {
@@ -42,7 +42,7 @@
         -288,
         2928
       ],
-      "id": "f0ab7638-5250-4614-a705-9b9101534ed2",
+      "id": "d162ad99-807b-4421-af49-8fcd130b0a5c",
       "name": "Цикл для батчинга элементов1",
       "notesInFlow": true,
       "notes": "Количество элементов в батче устанавливается в параметрах ноды"
@@ -59,7 +59,7 @@
         -896,
         2928
       ],
-      "id": "25bcaba0-20fb-407b-963e-2ef8ae096e47",
+      "id": "ab7f586d-6d20-4e82-a42e-70c3367a26f2",
       "name": "Сбор записей, не обработанных LLM1",
       "credentials": {
         "postgres": {
@@ -75,7 +75,7 @@
           "interval": [
             {
               "field": "minutes",
-              "minutesInterval": 2
+              "minutesInterval": 20
             }
           ]
         }
@@ -86,7 +86,7 @@
         -1568,
         2928
       ],
-      "id": "7e7682df-9714-48da-b330-02d3dc34a8d2",
+      "id": "8fe6b406-7b2f-4433-9931-6616f33b3fff",
       "name": "Schedule Trigger1"
     },
     {
@@ -102,7 +102,7 @@
         -1616,
         2240
       ],
-      "id": "1d6b3b72-ca7f-47fd-bb9b-d2b99f11c027",
+      "id": "605a26df-8a05-4973-91a6-8d77d6a47f4d",
       "name": "Sticky Note5"
     },
     {
@@ -115,7 +115,7 @@
         1200,
         2928
       ],
-      "id": "e2be1b8a-c5dc-4656-815f-74c1e4486bfe",
+      "id": "03d27121-0952-4f6d-bdf8-fd9352ed17ec",
       "name": "Info for LLM1"
     },
     {
@@ -126,7 +126,7 @@
         3168,
         3632
       ],
-      "id": "2fc6e61a-ca19-4599-99c7-0af17184db75",
+      "id": "48aef04e-a98b-48da-baf6-7a98eeebaf18",
       "name": "No Operation, do nothing"
     },
     {
@@ -137,7 +137,7 @@
         3200,
         2704
       ],
-      "id": "56f0ef25-93e8-495a-911b-f33d020fe8b3",
+      "id": "a0225601-eab5-4ba6-ba88-510ada1df891",
       "name": "Merge success output"
     },
     {
@@ -150,7 +150,7 @@
         1488,
         3024
       ],
-      "id": "a3385ffb-ab59-4bbc-b018-aa33f3a7f7cd",
+      "id": "9d7f172d-d085-44aa-8d63-ce4a9de900fb",
       "name": "Id for LLM1"
     },
     {
@@ -163,7 +163,7 @@
         3456,
         2704
       ],
-      "id": "c3b4cd38-62c1-4142-934c-f2363a60d18c",
+      "id": "cf07f196-dfc3-40dc-8927-5f9f88314600",
       "name": "Data from LLM Merge1"
     },
     {
@@ -178,7 +178,7 @@
         -1616,
         2608
       ],
-      "id": "fafbeb22-4013-42f3-a5c4-c771fdbaab27",
+      "id": "22877296-1847-4ebf-858a-6dbacad5dc63",
       "name": "Sticky Note6"
     },
     {
@@ -193,7 +193,7 @@
         1136,
         2544
       ],
-      "id": "be53ef2f-0ac3-4310-b34c-317e65d1059a",
+      "id": "8451c2c8-0458-4304-b63d-3208b539f134",
       "name": "Sticky Note7"
     },
     {
@@ -213,7 +213,7 @@
         2304,
         2976
       ],
-      "id": "4b3e812b-949d-44dd-967c-6da56da8e40a",
+      "id": "1705c54d-ea42-414b-8126-a48c573a34cf",
       "name": "OpenRouter Chat Model2",
       "credentials": {
         "openRouterApi": {
@@ -234,7 +234,7 @@
         3056,
         2320
       ],
-      "id": "0b649ce0-07ac-4eac-83e9-f1eeb7a8af33",
+      "id": "88083e44-1c0e-42bf-84c0-06b0f10fb67d",
       "name": "Sticky Note8"
     },
     {
@@ -250,7 +250,7 @@
         2656,
         3520
       ],
-      "id": "e250dfd4-255b-4e64-8171-e5599bfd23b3",
+      "id": "c9346898-a2f5-478a-8d61-93dd2bb7e141",
       "name": "Sticky Note9"
     },
     {
@@ -261,7 +261,7 @@
         -96,
         2432
       ],
-      "id": "4adaf650-4025-40b8-b16c-4d01afa909ce",
+      "id": "581aea2d-23c8-4227-b920-a73fe05001cb",
       "name": "Execute me to test Workflow1"
     },
     {
@@ -278,7 +278,7 @@
         4176,
         2704
       ],
-      "id": "ffbeb9b0-dc08-4ed3-a5c8-a1892c9d6688",
+      "id": "056c7ec5-b8d0-4a32-a438-21f9cbc97e8f",
       "name": "Обновление обработанных записей1",
       "credentials": {
         "postgres": {
@@ -300,7 +300,7 @@
         2368,
         3088
       ],
-      "id": "1cb787a4-91f8-462b-bb2e-7600bcd4b66d",
+      "id": "6d123fcf-58d9-43b8-9187-6b63981d5090",
       "name": "Structured Output Parser1"
     },
     {
@@ -314,7 +314,7 @@
         2368,
         3248
       ],
-      "id": "3d5ecd07-fb81-4681-81aa-e1a7695d5ba6",
+      "id": "68101745-f8f9-4128-bddf-53e203a71b2b",
       "name": "OpenRouter Chat Model3",
       "credentials": {
         "openRouterApi": {
@@ -331,7 +331,7 @@
         4176,
         3312
       ],
-      "id": "0e8c266b-bb3c-442b-ae35-7357e4466ae0",
+      "id": "b0b754e6-b9c7-4404-a301-754890283282",
       "name": "Завершение итерации1"
     },
     {
@@ -345,10 +345,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "filtersUI": {
           "values": [
@@ -373,7 +373,7 @@
         1376,
         2752
       ],
-      "id": "7d2a96e2-5844-46c8-831b-335a95931a07",
+      "id": "17de9c0d-6325-4ac3-8370-82a0d627ef24",
       "name": "Сборка промпта1",
       "executeOnce": true,
       "credentials": {
@@ -391,7 +391,7 @@
         1856,
         2768
       ],
-      "id": "6bd1c565-142b-45cf-93c2-609baecb0921",
+      "id": "9a0e46fe-7dee-4c1d-9ec6-05df59db5ce0",
       "name": "Автосборный промпт + сообщения1"
     },
     {
@@ -435,7 +435,7 @@
         2704,
         2768
       ],
-      "id": "bded6f5e-9077-4b56-a740-d54cddc329d0",
+      "id": "e528d5c8-29c8-4c6a-9867-2d23af788597",
       "name": "If output is not emtpy and input len = output len"
     },
     {
@@ -458,7 +458,7 @@
         1616,
         2752
       ],
-      "id": "34f0392b-42fe-4b77-92ec-7dacc660955d",
+      "id": "be02d18d-13b6-4b7b-b279-68547fb8996e",
       "name": "user_prompt",
       "executeOnce": true
     },
@@ -472,7 +472,7 @@
         144,
         2784
       ],
-      "id": "d25c88df-3a75-4a7c-b895-bcdf4636d620",
+      "id": "4cd1f2ef-c6d1-4285-a44d-cc189da9d205",
       "name": "Code in JavaScript"
     },
     {
@@ -483,7 +483,7 @@
         336,
         2928
       ],
-      "id": "fb00c66e-e7df-4356-a2f9-75453bc89e07",
+      "id": "fc4aa522-dc7a-4595-a760-dfeba671bd8d",
       "name": "Merge2"
     },
     {
@@ -498,7 +498,7 @@
         2944,
         3632
       ],
-      "id": "c93892ed-0c4e-4415-9ef9-38e56a8425b7",
+      "id": "7d97225a-f198-4b22-88a1-9cd4bebbccf6",
       "name": "Send text message",
       "credentials": {
         "telePilotApi": {
@@ -539,7 +539,7 @@
         2704,
         3632
       ],
-      "id": "92591e76-d5e2-43e7-81c2-38459f1cc680",
+      "id": "a1b06988-a9d2-4bd0-96e7-1e173efa2516",
       "name": "Execess items in output"
     },
     {
@@ -552,7 +552,7 @@
         624,
         2928
       ],
-      "id": "8495048d-ebab-45bd-8d26-07b7e08a6295",
+      "id": "335cf77d-b409-4876-9327-49f030c148de",
       "name": "Code in JavaScript1"
     },
     {
@@ -568,7 +568,7 @@
         1488,
         96
       ],
-      "id": "fc3cb6fe-3736-4327-bda7-9427d4a41212",
+      "id": "6d3c3230-630b-43e2-8795-c3a01b81bdf4",
       "name": "AI Agent",
       "executeOnce": true
     },
@@ -583,7 +583,7 @@
         -192,
         240
       ],
-      "id": "7e4b00b2-01df-4fe7-8854-6b01b1d18622",
+      "id": "7ef0b291-5d06-404a-bd97-c90d51bb8267",
       "name": "Цикл для батчинга элементов",
       "notesInFlow": true,
       "notes": "Количество элементов в батче устанавливается в параметрах ноды"
@@ -601,7 +601,7 @@
         -1680,
         -432
       ],
-      "id": "a677aaab-20a2-42ea-9cfe-f126df1e0833",
+      "id": "1fd82875-14a3-40e9-b60c-ba2cec48f09b",
       "name": "Sticky Note"
     },
     {
@@ -612,7 +612,7 @@
         2384,
         960
       ],
-      "id": "2447d462-d977-4536-91da-de43a401bd2e",
+      "id": "d424b5d3-a8cc-46ff-a608-33a52d69bf84",
       "name": "No Operation, do nothing1"
     },
     {
@@ -623,7 +623,7 @@
         2416,
         32
       ],
-      "id": "a2c7725b-c23f-43ba-9f3e-b5a0cf211dec",
+      "id": "5feb619a-ca6d-46f6-aa72-dd2a9b959dc5",
       "name": "Merge success output1"
     },
     {
@@ -636,7 +636,7 @@
         2672,
         32
       ],
-      "id": "8b811c82-e81f-4a0f-9d25-82283ad8a1dd",
+      "id": "1afdbb21-5ae8-405c-8fcd-29b35ede0cea",
       "name": "Data from LLM Merge"
     },
     {
@@ -651,7 +651,7 @@
         -1632,
         -80
       ],
-      "id": "251f97fa-737a-4127-a481-520b3734e419",
+      "id": "a9c690d4-5b78-4fb1-8667-5115ad8f64f7",
       "name": "Sticky Note10",
       "disabled": true
     },
@@ -667,7 +667,7 @@
         352,
         -128
       ],
-      "id": "e6e704ac-b643-45fb-8487-593f56c6cf08",
+      "id": "63b51b2d-fb21-4507-834d-3e7940684341",
       "name": "Sticky Note11"
     },
     {
@@ -687,7 +687,7 @@
         1488,
         304
       ],
-      "id": "c1df79e1-f299-4824-971f-a49ae0abbb23",
+      "id": "b5d5ebc0-9dae-40b4-b77d-9b5906a07f08",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
@@ -708,7 +708,7 @@
         2352,
         -272
       ],
-      "id": "a41010ea-dd44-488d-b600-658efe1a8863",
+      "id": "7d85c68a-84e2-4d82-a250-bcc172722fba",
       "name": "Sticky Note12"
     },
     {
@@ -724,7 +724,7 @@
         1872,
         848
       ],
-      "id": "11d70c7f-f0e2-450a-8aa2-2e274b963112",
+      "id": "edd6d40d-ee45-42bf-81d6-d95f7dfbbecf",
       "name": "Sticky Note13"
     },
     {
@@ -739,7 +739,7 @@
         1552,
         416
       ],
-      "id": "10723c35-edcb-46f5-97d0-f38922012a3b",
+      "id": "53a1baf0-338d-4a74-8bc8-0dc8d79914ee",
       "name": "Structured Output Parser",
       "executeOnce": false
     },
@@ -754,7 +754,7 @@
         1552,
         576
       ],
-      "id": "e2ee195c-c4f7-4320-9411-6148aa0453c5",
+      "id": "e031f433-72c6-4fa1-b076-5671dc45d8de",
       "name": "OpenRouter Chat Model4",
       "credentials": {
         "openRouterApi": {
@@ -774,10 +774,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "options": {
           "dataLocationOnSheet": {
@@ -794,7 +794,7 @@
         432,
         96
       ],
-      "id": "db732f2c-93ca-40c4-be2a-4cc58c1b9b62",
+      "id": "981faf67-23f5-4c54-8cde-163ae8743fe9",
       "name": "Сборка промпта",
       "executeOnce": true,
       "credentials": {
@@ -812,7 +812,7 @@
         976,
         96
       ],
-      "id": "237a3a75-689f-427d-96f5-e414cb164956",
+      "id": "89dc5359-8e79-4190-9030-a33ddbeedd75",
       "name": "Автосборный промпт + сообщения"
     },
     {
@@ -856,7 +856,7 @@
         1920,
         96
       ],
-      "id": "15b237a7-7aad-497f-a142-142eb7a743a2",
+      "id": "b5e3e129-b1e2-4182-ac2f-d74f010fb6bf",
       "name": "If output is not emtpy and input len = output len1"
     },
     {
@@ -879,7 +879,7 @@
         752,
         96
       ],
-      "id": "916d5ff4-6b5e-432c-a66b-7a2bae3723d4",
+      "id": "14cf75c2-7158-4f75-a966-7a1c542cc7d6",
       "name": "user_prompt1",
       "executeOnce": true
     },
@@ -895,7 +895,7 @@
         2160,
         960
       ],
-      "id": "d99d9c14-d091-461b-bcc6-6f7ae577a1f9",
+      "id": "647dfb4a-dfa2-4996-9375-666704412c78",
       "name": "Send text message1",
       "credentials": {
         "telePilotApi": {
@@ -936,7 +936,7 @@
         1920,
         960
       ],
-      "id": "e58bac57-ed8e-42f0-8908-00520c21ecf5",
+      "id": "4fc9fa67-dc97-4afb-8f72-4f028d58dc7d",
       "name": "Execess items in output1"
     },
     {
@@ -947,7 +947,7 @@
         -1536,
         240
       ],
-      "id": "35fe0203-2104-43f8-93d8-afcc1db066a9",
+      "id": "779d2cbc-7b27-4f5a-8511-9502f32a5427",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -961,10 +961,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "options": {}
       },
@@ -974,7 +974,7 @@
         -1344,
         240
       ],
-      "id": "d84f14f1-f99f-48dd-a016-4bffa5cb7fa4",
+      "id": "c36b210a-c1e5-458d-8c02-3b1d7a328791",
       "name": "Get Test Data",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1024,7 +1024,7 @@
         -1152,
         240
       ],
-      "id": "1574bb9f-93f3-401d-8297-4d09e5fa7c7d",
+      "id": "027a614a-6d20-48ae-be1b-a106e4487703",
       "name": "Filter"
     },
     {
@@ -1065,7 +1065,7 @@
         -928,
         240
       ],
-      "id": "94a2b73a-47a4-46c9-b7af-a1bc05ddfc84",
+      "id": "70ce405a-5019-43b9-ad87-7204326231a9",
       "name": "Get Messages"
     },
     {
@@ -1109,7 +1109,7 @@
         -704,
         240
       ],
-      "id": "98d1e8b5-bdef-48c8-9bd9-7bd9df059e34",
+      "id": "d73c0983-381c-4864-b23a-58320a6f484b",
       "name": "Non empty message"
     },
     {
@@ -1122,7 +1122,7 @@
         -464,
         240
       ],
-      "id": "de7d1054-20d8-487e-a18d-02c6ceaab271",
+      "id": "73cc3a4c-2c4b-43ec-8013-88412115afcf",
       "name": "Code in JavaScript2"
     },
     {
@@ -1135,22 +1135,8 @@
         432,
         368
       ],
-      "id": "cdd4c051-d5d4-4c6e-aece-ef763101777b",
+      "id": "571f2acf-69e7-4a8a-9dfa-ba5d2d87399f",
       "name": "Multiple items"
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst result = {};\n\nitems.forEach((item) => {\n  const data = item.json;\n  const id = data.id ?? data.ID ?? null;\n\n  if (id === null) {\n    return;\n  }\n\n  result[`id_${id}`] = id;\n  result[`text_${id}`] = data.text ?? '';\n});\n\nreturn [\n  {\n    json: result,\n  },\n];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        432,
-        560
-      ],
-      "id": "08f328a0-805b-4105-958c-63d3255f0a17",
-      "name": "Single item",
-      "disabled": true
     },
     {
       "parameters": {
@@ -1163,7 +1149,7 @@
         752,
         368
       ],
-      "id": "d55c21af-fc9f-4299-9fa2-67d65507fce6",
+      "id": "72d78717-1bd0-4eab-befe-05b8278ba1e8",
       "name": "Aggregate"
     },
     {
@@ -1176,7 +1162,7 @@
         1184,
         96
       ],
-      "id": "545764cb-a63f-4a8a-be24-74b1e2964f53",
+      "id": "aa792421-ab25-4e7c-8685-741fd10bf253",
       "name": "Code in JavaScript3"
     },
     {
@@ -1187,7 +1173,7 @@
         3504,
         624
       ],
-      "id": "d49c98f9-03bc-43c2-9f1d-f36e5df568dc",
+      "id": "a86611b6-a6cb-4733-9bc4-f125e609d28f",
       "name": "Завершение итерации"
     },
     {
@@ -1202,10 +1188,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1306,7 +1292,7 @@
         3136,
         -64
       ],
-      "id": "e88373b9-016e-48bd-a165-d2eedb6e739e",
+      "id": "39689b90-bb9a-4ec7-8d22-3468dd15fab5",
       "name": "True Test Predict1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1327,10 +1313,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1431,7 +1417,7 @@
         3136,
         128
       ],
-      "id": "48d4e125-ba07-42a2-a5c0-4c8c6f5dbb07",
+      "id": "47f410c5-bcd6-437d-853b-43a2f3ff5465",
       "name": "False Test Predict1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1504,7 +1490,7 @@
         2896,
         32
       ],
-      "id": "29af3510-0c3e-4b61-a5db-027013747232",
+      "id": "b696be86-66ad-4c9b-8cff-de82ab333361",
       "name": "Switch1"
     },
     {
@@ -1517,7 +1503,7 @@
         816,
         -448
       ],
-      "id": "d09f958a-6229-4e6a-8781-1a57407e26f4",
+      "id": "7d72e49b-31c2-47d7-8b49-185cf0348ab5",
       "name": "Code in JavaScript4",
       "disabled": true
     },
@@ -1532,7 +1518,7 @@
         576,
         -448
       ],
-      "id": "a8d961f1-0968-414f-81e5-babb7d104143",
+      "id": "17a4132c-3131-456b-8fed-f127e9349df9",
       "name": "Aggregate1",
       "disabled": true
     },
@@ -1548,7 +1534,7 @@
         352,
         -576
       ],
-      "id": "42bf4f2e-7f8c-4568-b9a2-7d768914004d",
+      "id": "855f0017-674c-494f-8475-bc5915758c11",
       "name": "Sticky Note1"
     },
     {
@@ -1668,7 +1654,7 @@
         1056,
         -448
       ],
-      "id": "fb672dc0-58cf-4126-a701-430853e8f25c",
+      "id": "ee466138-0e75-4331-80e6-f2a68d752f61",
       "name": "Test Predict Update",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1686,7 +1672,7 @@
         16,
         16
       ],
-      "id": "9ae68da4-0e1b-4003-8cb1-9ec46bb0d07a",
+      "id": "1a6171ff-fbf0-464e-89cf-0d4e3f48d75f",
       "name": "Finish Cycle"
     },
     {
@@ -1709,7 +1695,7 @@
         -1136,
         2928
       ],
-      "id": "5139d7c6-1cf2-41da-97ed-0191d71294b6",
+      "id": "21c069d4-97c3-40f8-a71a-5dd6dc54cbe2",
       "name": "chat_ids_array"
     },
     {
@@ -1723,7 +1709,7 @@
         896,
         2928
       ],
-      "id": "49d467b3-0a6c-4490-9734-d05149a9e843",
+      "id": "ec951a8f-2db6-4a39-927a-015228a9cd67",
       "name": "Aggregate2"
     },
     {
@@ -1737,10 +1723,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "filtersUI": {
           "values": [
@@ -1765,7 +1751,7 @@
         -48,
         2784
       ],
-      "id": "6fee6031-8ec2-4682-800b-2fd47007a119",
+      "id": "4e263a83-186e-4298-8525-623df8baa496",
       "name": "Get target_chat_id",
       "executeOnce": true,
       "credentials": {
@@ -1785,7 +1771,7 @@
         2080,
         2768
       ],
-      "id": "3f8386d1-7200-4114-bd5e-17e7e85a0742",
+      "id": "9df81d96-9716-4fb9-b52e-8a4605dfc6cd",
       "name": "Code in JavaScript5"
     },
     {
@@ -1798,7 +1784,7 @@
         3696,
         2704
       ],
-      "id": "532b44ef-96ab-4fdb-bacd-f15205bdd5ae",
+      "id": "35ed7ed9-976c-4663-8488-ea3b320415a2",
       "name": "Разделение элементов агрегации1"
     },
     {
@@ -1832,7 +1818,7 @@
         -640,
         2928
       ],
-      "id": "baa44de9-57de-4bfa-99f7-c9e336127124",
+      "id": "3eb21502-974c-4836-8686-77a416648955",
       "name": "If message chat_id IN (targert_chat_id)"
     },
     {
@@ -1846,10 +1832,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1010465904,
+          "value": 1542279637,
           "mode": "list",
-          "cachedResultName": "Search Boards",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1010465904"
+          "cachedResultName": "Search CV",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11XzA9W1vUInu0Qh0Vrp5FspCfq2mZ8Aas2O6wR7mcvA/edit#gid=1542279637"
         },
         "options": {
           "dataLocationOnSheet": {
@@ -1866,7 +1852,7 @@
         -1344,
         2928
       ],
-      "id": "d032a5a6-ea71-4f46-a353-c8605e3435b2",
+      "id": "ef59bde3-75d1-40c0-b3a2-e5488057be62",
       "name": "Get_chat_ids",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -2188,11 +2174,6 @@
         [
           {
             "node": "Multiple items",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Single item",
             "type": "main",
             "index": 0
           },
@@ -2597,18 +2578,18 @@
     "errorWorkflow": "Cuotassx3PEelIog",
     "executionTimeout": 180
   },
-  "versionId": "8a885bca-bf2b-46bb-a3ac-5bba6773065a",
+  "versionId": "6d4362b0-d029-4adf-abc0-6072c3ad455c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "85c4b7fce07d641848755f7319c155322c67f73dc44bfdfe3c4148640754780c"
   },
-  "id": "08NIRN2H1l2yIgsH",
+  "id": "gTRr3AFihRIF1blg",
   "tags": [
     {
-      "updatedAt": "2026-03-09T01:05:09.484Z",
-      "createdAt": "2026-03-09T01:05:09.484Z",
-      "id": "59GAEkUSAPNKDxMT",
-      "name": "Search ID2"
+      "updatedAt": "2026-03-09T01:06:05.829Z",
+      "createdAt": "2026-03-09T01:06:05.829Z",
+      "id": "TefpxPmVXL8tp7TE",
+      "name": "Search ID3"
     }
   ]
 }
