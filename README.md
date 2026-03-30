@@ -72,7 +72,8 @@ https://docs.docker.com/compose/install/
 1) **Настраиваем .env файл** (`./src/env_expample.txt`):
 ```bash
 cd ./n8n-selfbot-message-parser/src
-nano env_example.txt
+cp env_example.txt .env
+nano .env
 ```
 Достаточно изменить только пароль в Postgre `POSTGRES_PASSWORD`, но желательно также изменить `POSTGRES_USER`
 
@@ -82,7 +83,7 @@ nano env_example.txt
 2) После настройки `.env` поднимаем контейнер:
 
 ```bash
-docker compose -p n8n-test up -d
+docker compose -p "project-name" up -d
 ```
 где:
 - `-p` - флаг изменения названия проекта в докере (без фалага докер будет брать название папки, в которой лежит `docker-compose.yml`)
