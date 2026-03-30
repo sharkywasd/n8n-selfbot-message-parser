@@ -17,7 +17,13 @@ services:
       retries: 10
 
   n8n:
-    image: docker.n8n.io/n8nio/n8n:2.11.3
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n-telepilot
+      args:
+        N8N_VERSION: 2.11.3
+        TELEPILOT_NODE_VERSION: 0.5.10
+    image: palatine/n8n-telepilot:2.11.3-0.5.10
     restart: always
     environment:
       - DB_TYPE=postgresdb
@@ -27,7 +33,11 @@ services:
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      - N8N_RUNNERS_ENABLED=true
+      - EXECUTIONS_PROCESS=main
+      - N8N_LOG_LEVEL=debug
+      - N8N_LOG_OUTPUT=console
+      - DEBUG=tdl,tdl:client,telepilot-cred,telepilot-node,telepilot-trigger,telepilot-cm
+      - NODE_OPTIONS=--max-old-space-size=2048
       - GENERIC_TIMEZONE=Europe/Moscow
       - TZ=Europe/Moscow
       - N8N_COMMUNITY_PACKAGES_ENABLED=true

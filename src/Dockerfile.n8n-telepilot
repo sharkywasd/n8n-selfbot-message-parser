@@ -1,0 +1,13 @@
+ARG N8N_VERSION=2.11.3
+FROM docker.n8n.io/n8nio/n8n:${N8N_VERSION}
+
+USER node
+
+ARG TELEPILOT_NODE_VERSION=0.5.10
+
+RUN mkdir -p /home/node/.n8n/nodes \
+ && cd /home/node/.n8n/nodes \
+ && npm config set fetch-retries 8 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000 \
+ && npm install @sharkywasd/n8n-nodes-telepilot@${TELEPILOT_NODE_VERSION} --omit=dev --no-audit --no-fund
