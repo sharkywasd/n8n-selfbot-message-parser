@@ -83,7 +83,7 @@ nano .env
 2) После настройки `.env` поднимаем контейнер:
 
 ```bash
-docker docker compose -p "project-name" up -d --build
+docker compose -p "project-name" up -d --build
 ```
 где:
 - `-p` - флаг изменения названия проекта в докере (без фалага докер будет брать название папки, в которой лежит `docker-compose.yml`)
